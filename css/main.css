@@ -1,0 +1,30 @@
+body {
+    text-align: center;
+}
+
+#main {
+    margin-right: auto;
+    margin-left: auto;
+    width: 96%;
+}
+
+#container {
+    margin-top: 20px;
+}
+
+.item {
+    margin: 5px;
+}
+
+.hide {
+    display: none !important;
+}
+
+.show {
+    display: block !important;
+}
+
+.backdrop {
+    background-color: rgba(0,0,0,0.7);
+    z-index: 990;
+}

@@ -1,0 +1,14 @@
+{
+    "name": "torn_item_tracker",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "http-server -a localhost -p 8080"
+    },
+    "author": "avedwan",
+    "license": "ISC",
+    "dependencies": {
+        "http-server": "^0.11.1"
+    }
+}
