@@ -26,7 +26,7 @@ define(['text!../template/userInput.html'], userInputTemplate => {
     return {
         asElement(str) {
             let template = document.createElement('template');
-            template.innerHTML = str;
+            template.innerHTML = str.trim();
             return template.content.firstChild;
         },
 
@@ -55,7 +55,7 @@ define(['text!../template/userInput.html'], userInputTemplate => {
             var textArea = document.createElement('textarea');
             textArea.setAttribute('style', 'width: 1px; border: 0; opacity: 0;');
             document.body.appendChild(textArea);
-            textArea.value = string;
+            textArea.value = string.trim();
             textArea.select();
 
             document.execCommand('copy');
@@ -63,14 +63,14 @@ define(['text!../template/userInput.html'], userInputTemplate => {
         },
 
         query(url) {
-            return fetch(url).then(response => response.json());
+            return fetch(url).then(response => response.json()).catch(error => {
+                console.log(error);
+                throw error;
+            });
         },
 
-        toMap(arr, keyMapper, valueMapper = a => a) {
-            return arr.reduce((map, item) => {
-                map[keyMapper(item)] = valueMapper(item);
-                return map;
-            }, Object.create(null));
+        toMap(arr, keyMapper = a => a, valueMapper = a => a) {
+            return new Map(arr.map(a => [keyMapper(a), valueMapper(a)]));
         }
     };
 });

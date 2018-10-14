@@ -3,13 +3,12 @@ requirejs(['text!../template/main.html', 'search', 'tracker', 'trader', 'util'],
     var main = document.querySelector('#main');
     main.appendChild(util.asElement(mainTemplate));
 
-    var tabs = main.querySelectorAll('#container div.tab');
-    main.querySelector('#container ul.nav').addEventListener('click', event => {
+    var tabs = main.querySelectorAll('div.tab');
+    main.querySelector('ul.nav').addEventListener('click', event => {
         var tabId = event.target.getAttribute('href');
         if (!tabId) return;
 
         event.preventDefault();
-
         tabs.forEach(tab => {
             if (`#${tab.getAttribute('id')}` === tabId) {
                 tab.classList.remove('hide');
@@ -21,16 +20,10 @@ requirejs(['text!../template/main.html', 'search', 'tracker', 'trader', 'util'],
         });
     });
 
-    main.querySelector('#container #track-tab').addEventListener('click', event => {
-        tracker.track(search.selected());
-    });
-    main.querySelector('#container #trade-tab').addEventListener('click', event => {
-        trader.trade(search.selected());
-    });
+    main.querySelector('#track-tab').addEventListener('click', async () => tracker.track(await search.selected()));
+    main.querySelector('#trade-tab').addEventListener('click', async () => trader.trade(await search.selected()));
 
-    search.init(main);
-    tracker.init(main);
-    trader.init(main);
+    [search, tracker, trader].forEach(a => a.init(main));
 
-    main.querySelector('#container ul.nav li a.nav-link.active').click();
+    main.querySelector('ul.nav li a.nav-link.active').click();
 });

@@ -11,21 +11,19 @@ define(['text!../template/search.html', 'text!../template/item.html', 'api', 'ut
     }
 
     function itemClickTemplate(handler, event) {
-        event.preventDefault();
-
         var target = event.target;
         if (target.nodeName.toLowerCase() === 'img') target = target.parentNode;
         if (!target.classList.contains('item')) return;
 
+        event.preventDefault();
         handler(target);
     }
 
-    var result = api.allItems().catch(err => {});
-    var items = result.then(response => Object.keys(response.items).map(id => {
+    var items = api.allItems().then(response => Object.keys(response.items).map(id => {
         var clone = Object.create(response.items[id]);
         clone.id = id;
         return clone;
-    }));
+    })).catch(err => []);
     var itemMap = items.then(items => util.toMap(items, a => a.id));
 
     var searchResults;
@@ -44,7 +42,7 @@ define(['text!../template/search.html', 'text!../template/item.html', 'api', 'ut
 
             searchResults.addEventListener('click', itemClickTemplate.bind(this, target => {
                 target.classList.add('hide');
-                itemMap.then(items => selected.appendChild(itemAsElement(target.dataset.id, items[target.dataset.id])));
+                itemMap.then(items => selected.appendChild(itemAsElement(target.dataset.id, items.get(target.dataset.id))));
             }));
             selected.addEventListener('click', itemClickTemplate.bind(this, target => {
                 searchResults.querySelector(`#item-${target.dataset.id}`).classList.remove('hide');
@@ -55,18 +53,16 @@ define(['text!../template/search.html', 'text!../template/item.html', 'api', 'ut
                 util.toClipboard(Array.prototype.map.call(selected.querySelectorAll('.item'), elem => elem.dataset.id).toString());
             });
 
-            searchTab.querySelector('#import').addEventListener('click', event => {
-                util.fromClipboard().then(str => str.split(',').map(a => a.trim()).map(a => searchResults.querySelector(`#item-${a}`))
-                    .filter(a => a && !a.classList.contains('hide')).forEach(elem => elem.click()));
+            searchTab.querySelector('#import').addEventListener('click', async () => {
+                var str = await util.fromClipboard();
+                str.split(',').map(a => searchResults.querySelector(`#item-${a.trim()}`))
+                    .filter(a => a && !a.classList.contains('hide')).forEach(elem => elem.click());
             });
 
             let prevRequest;
             [[typeSelect, 'change'], [searchInput, 'keyup']].forEach(a => a[0].addEventListener(a[1], event => {
                 event.preventDefault();
-
-                if (prevRequest) {
-                    clearTimeout(prevRequest);
-                }
+                if (prevRequest) clearTimeout(prevRequest);
 
                 var value = searchInput.value.trim().toLowerCase();
                 var type = typeSelect.value;
@@ -75,10 +71,9 @@ define(['text!../template/search.html', 'text!../template/item.html', 'api', 'ut
                     searchResults.querySelectorAll('.item').forEach(a => a.classList.add('hide'));
                     var selectedIds = Array.prototype.map.call(selected.querySelectorAll('.item'), a => a.dataset.id);
 
-                    items.filter(a => a[type].toLowerCase().includes(value))
-                        .filter(a => !selectedIds.includes(a.id))
+                    items.filter(a => a[type].toLowerCase().includes(value) && !selectedIds.includes(a.id))
                         .forEach(a => searchResults.querySelector(`#item-${a.id}`).classList.remove('hide'));
-                }), 500);
+                }), 0.5 * 1000);
             }));
 
             items.then(items => items.forEach(a => searchResults.appendChild(itemAsElement(a.id, a))));
@@ -86,7 +81,7 @@ define(['text!../template/search.html', 'text!../template/item.html', 'api', 'ut
 
         selected() {
             return itemMap.then(items => {
-                return Array.prototype.map.call(selected.querySelectorAll('.item'), a => items[a.dataset.id]);
+                return Array.prototype.map.call(selected.querySelectorAll('.item'), a => items.get(a.dataset.id));
             });
         }
     }

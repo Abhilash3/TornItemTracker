@@ -1,23 +1,14 @@
 define(['util'], util => {
     const API_KEY = 'Your Api Key';
 
-    function query(type, id, selections) {
-        return util.query(`https://api.torn.com/${type}/${id}?selections=${selections}&key=${API_KEY}`).catch(error => {
-            console.log(error);
-            throw error;
-        });
-    }
+    const DEFAULT_PRICE = {cost: -1};
 
     function allItems() {
         return tornQuery('items');
     }
 
-    function priceQuery(itemId, selection) {
-        return query('market', itemId, selection);
-    }
-
     function itemPrices(itemId) {
-        return priceQuery(itemId, 'itemmarket,bazaar').then(prices => {
+        return query('market', itemId, 'itemmarket,bazaar').then(prices => {
             var allPrices = Object.keys(prices).reduce((all, selection) => {
                 var values = Object.keys(prices[selection]).map(id => {
                     var clone = Object.create(prices[selection][id]);
@@ -38,7 +29,12 @@ define(['util'], util => {
     }
 
     function lowestItemPrice(itemId) {
-        return itemPrices(itemId).then(a => a.prices.reduce((b, c) => b.cost > c.cost || b.cost === -1 ? c : b, {cost: -1}));
+        return itemPrices(itemId).then(a => a.prices.reduce((b, c) => b.cost > c.cost || b.cost === -1 ? c : b, DEFAULT_PRICE))
+            .catch(err => DEFAULT_PRICE);
+    }
+
+    function query(type, id, selections) {
+        return util.query(`https://api.torn.com/${type}/${id}?selections=${selections}&key=${API_KEY}`);
     }
 
     function tornQuery(selection) {

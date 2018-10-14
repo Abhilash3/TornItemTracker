@@ -1,5 +1,5 @@
 requirejs.config({
-    baseUrl: 'src',
+    baseUrl: 'build',
     paths: {
         text: '../lib/text',
         chart: '../lib/chart.bundle',
