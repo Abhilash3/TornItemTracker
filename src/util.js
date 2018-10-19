@@ -1,4 +1,4 @@
-define(['text!../template/userInput.html'], userInputTemplate => {
+define(['text!../template/userInput.html', 'text!../template/itemImport.html'], (userInputTemplate, itemImportTemplate) => {
 
     // Opera 8.0+
     var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
@@ -37,17 +37,35 @@ define(['text!../template/userInput.html'], userInputTemplate => {
         fromClipboard() {
             return new Promise((resolve, reject) => {
                 var userInput = this.asElement(userInputTemplate);
-                userInput.querySelector('#submit').addEventListener('click', event => {
-                    var value = userInput.querySelector('input').value || '';
+                var itemImport = this.asElement(itemImportTemplate);
+
+                ['.modal-header', '.modal-footer'].forEach(selector => {
+                    var elem = userInput.querySelector(selector);
+                    elem.parentNode.removeChild(elem)
+                });
+
+                userInput.querySelector('.modal-body').appendChild(itemImport);
+
+                var submit = itemImport.querySelector('#submit');
+                var cancel = itemImport.querySelector('#cancel');
+                var input = itemImport.querySelector('input');
+
+                submit.addEventListener('click', () => {
+                    var value = input.value || '';
                     document.body.removeChild(userInput);
                     resolve(value.trim());
                 });
-                userInput.querySelector('#cancel').addEventListener('click', event => {
+                cancel.addEventListener('click', () => {
                     document.body.removeChild(userInput);
                     resolve('');
                 });
+                input.addEventListener('keyup', event => {
+                    if (event.keyCode === 13) submit.click();
+                    if (event.keyCode === 27) cancel.click();
+                });
 
                 document.body.appendChild(userInput);
+                input.focus();
             });
         },
 

@@ -1,8 +1,6 @@
 define(['util'], util => {
     const API_KEY = 'Your Api Key';
 
-    const DEFAULT_PRICE = {cost: -1};
-
     function allItems() {
         return tornQuery('items');
     }
@@ -29,8 +27,12 @@ define(['util'], util => {
     }
 
     function lowestItemPrice(itemId) {
-        return itemPrices(itemId).then(a => a.prices.reduce((b, c) => b.cost > c.cost || b.cost === -1 ? c : b, DEFAULT_PRICE))
-            .catch(err => DEFAULT_PRICE);
+        return itemPrices(itemId).then(response => {
+            var prices = response.prices.map(price => price.cost);
+            if (!prices.length) return 'N/A';
+
+            return prices.reduce((a, b) => a > b ? b : a);
+        }).catch(err => 'N/A');
     }
 
     function query(type, id, selections) {

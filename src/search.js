@@ -26,7 +26,6 @@ define(['text!../template/search.html', 'text!../template/item.html', 'api', 'ut
     })).catch(err => []);
     var itemMap = items.then(items => util.toMap(items, a => a.id));
 
-    var searchResults;
     var selected;
 
     return {
@@ -34,7 +33,7 @@ define(['text!../template/search.html', 'text!../template/item.html', 'api', 'ut
             var searchTab = parent.querySelector('#search');
             searchTab.appendChild(util.asElement(searchTemplate));
 
-            searchResults = searchTab.querySelector('div#search-result');
+            var searchResults = searchTab.querySelector('div#search-result');
             selected = searchTab.querySelector('div#selected');
 
             var typeSelect = searchTab.querySelector('#search-type');
@@ -71,7 +70,7 @@ define(['text!../template/search.html', 'text!../template/item.html', 'api', 'ut
                     searchResults.querySelectorAll('.item').forEach(a => a.classList.add('hide'));
                     var selectedIds = Array.prototype.map.call(selected.querySelectorAll('.item'), a => a.dataset.id);
 
-                    items.filter(a => a[type].toLowerCase().includes(value) && !selectedIds.includes(a.id))
+                    items.filter(a => ('' + a[type]).toLowerCase().includes(value) && !selectedIds.includes(a.id))
                         .forEach(a => searchResults.querySelector(`#item-${a.id}`).classList.remove('hide'));
                 }), 0.5 * 1000);
             }));

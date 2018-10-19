@@ -2,22 +2,22 @@ define(['text!../template/trader.html', 'api', 'util'], function(traderTemplate,
 
     function calculators(items, prices, inventory) {
         return items.map((item, n) => {
-            var quantity = inventory.get(Number(item.id)) || 0;
+            var quantity = inventory.get(item.name) || 0;
             return util.asElement(`
-                <tr id="calc-${item.id}" data-id="${item.id}" class="row item-calc">
-                    <td class="col">${item.name}</td>
-                    <td class="col price">${prices[n].cost}</td>
-                    <td class="col"><input type="number" class="form-control" placeholder="price..." /></td>
-                    <td class="col count">${quantity}</td>
-                    <td class="col-3 value">0</td>
+                <tr id='calc-${item.id}' data-id='${item.id}' class='row item-calc'>
+                    <td class='col'>${item.name}</td>
+                    <td class='col price'>${prices[n]}</td>
+                    <td class='col'><input type='number' class='form-control' placeholder='0' /></td>
+                    <td class='col count'>${quantity}</td>
+                    <td class='col-3 value'>0</td>
                 </tr>`);
         });
     }
 
     var tbody;
     var total;
-    var prevItemNames;
-    var requests;
+    var itemNames;
+    var request;
 
     return {
         init(parent) {
@@ -38,34 +38,45 @@ define(['text!../template/trader.html', 'api', 'util'], function(traderTemplate,
                     return sum + Number(elem.innerHTML);
                 }, 0);
             });
+
+            traderTab.querySelector('#copy').addEventListener('click', () => {
+                var rows = tbody.querySelectorAll('tr.item-calc');
+                if (!rows.length) return;
+
+                var log = Array.prototype.reduce.call(rows, (acc, calc) => {
+                    var tds = calc.querySelectorAll('td');
+                    return `${acc}\n${tds[0].innerHTML} [lowest price: ${tds[1].innerHTML}]:\n\t` +
+                        `${tds[2].children[0].value || 0} * ${tds[3].innerHTML} = ${tds[4].innerHTML}`;
+                }, '');
+
+                util.toClipboard(`${log}\n\nTotal: ${total.innerHTML}`);
+            });
         },
 
         trade(items) {
-            var itemNames = items.map(item => item.name).sort().join();
-            if (itemNames === prevItemNames) return;
+            var names = items.map(item => item.name).sort().join();
+            if (itemNames === names) return;
 
-            prevItemNames = itemNames;
+            itemNames = names;
 
             tbody.innerHTML = '';
             total.innerHTML = '0';
-            if (requests) requests.forEach(clearInterval);
+            if (request) clearInterval(request);
 
             var inventory = api.userQuery('inventory')
-                .then(response => util.toMap(response.inventory, a => Number(a.ID), a => a.quantity))
-                .catch(err => util.toMap([]));
+                .then(response => response.inventory).catch(err => [])
+                .then(inventory => util.toMap(inventory, a => a.name, a => a.quantity));
 
             var prices = Promise.all(items.map(item => api.lowestItemPrice(item.id)));
 
             (async function() {
-                requests = calculators(items, await prices, await inventory).map(elem => {
-                    tbody.appendChild(elem);
+                var elems = calculators(items, await prices, await inventory);
+                elems.forEach(elem => tbody.appendChild(elem));
 
-                    var display = elem.querySelector('.price');
-                    return setInterval(async function() {
-                        var price = await api.lowestItemPrice(elem.dataset.id);
-                        display.innerHTML = price.cost;
-                    }, 15 * 1000);
-                });
+                request = setInterval(async () => {
+                    var prices = await Promise.all(elems.map(elem => api.lowestItemPrice(elem.dataset.id)));
+                    elems.forEach((elem, n) => elem.querySelector('.price').innerHTML = prices[n]);
+                }, 15 * 1000);
             })();
         }
     };

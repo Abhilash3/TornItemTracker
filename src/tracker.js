@@ -1,6 +1,6 @@
 define(['text!../template/tracker.html', 'api', 'util', 'chart'], (trackerTemplate, api, util, Chart) => {
 
-    const MAX_HISTORY_ENTRIES = 200;
+    const MAX_HISTORY = 2000;
 
     function randomColor() {
         var r = Math.floor(Math.random() * 255);
@@ -16,10 +16,8 @@ define(['text!../template/tracker.html', 'api', 'util', 'chart'], (trackerTempla
             var color = history.get(item.name).color;
             var values = history.get(item.name).values;
 
-            if (values.length === MAX_HISTORY_ENTRIES) {
-                values.shift();
-            }
-            values.push(Number(prices[n].cost));
+            if (values.length === MAX_HISTORY) values.shift();
+            values.push(prices[n]);
 
             return {
                 label: item.name,
@@ -40,8 +38,8 @@ define(['text!../template/tracker.html', 'api', 'util', 'chart'], (trackerTempla
         chart.update();
     }
 
-    var prevRequest;
-    var prevItemNames;
+    var request;
+    var itemNames;
     var chart;
 
     return {
@@ -54,7 +52,7 @@ define(['text!../template/tracker.html', 'api', 'util', 'chart'], (trackerTempla
             chart = new Chart(context, {
                 type: 'line',
                 data: {
-                    labels: new Array(MAX_HISTORY_ENTRIES).fill(0).map((a, b) => MAX_HISTORY_ENTRIES - b),
+                    labels: new Array(MAX_HISTORY).fill(0).map((a, b) => MAX_HISTORY - b),
                     datasets: []
                 },
                 options: {
@@ -88,16 +86,16 @@ define(['text!../template/tracker.html', 'api', 'util', 'chart'], (trackerTempla
         },
 
         track(items) {
-            var itemNames = items.map(item => item.name).sort().join();
-            if (itemNames === prevItemNames) return;
+            var names = items.map(item => item.name).sort().join();
+            if (names === itemNames) return;
 
-            prevItemNames = itemNames;
-            if (prevRequest) clearTimeout(prevRequest);
+            itemNames = names;
+            if (request) clearTimeout(request);
 
             var history = util.toMap(items, a => a.name, () => ({ values: [], color: randomColor() }));
 
             trackPrices(items, history);
-            prevRequest = setInterval(() => trackPrices(items, history), 15 * 1000);
+            request = setInterval(() => trackPrices(items, history), 15 * 1000);
         }
     }
 });
