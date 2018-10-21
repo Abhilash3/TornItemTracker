@@ -1,7 +1,13 @@
-requirejs(['text!../template/main.html', 'search', 'tracker', 'trader', 'util'], function(mainTemplate, search, tracker, trader, util) {
+import * as search from './search';
+import * as tracker from './tracker';
+import * as trader from './trader';
+import { asElement } from './util';
 
+import mainTemplate from '../template/main.html';
+
+export function init() {
     var main = document.querySelector('#main');
-    main.appendChild(util.asElement(mainTemplate));
+    main.appendChild(asElement(mainTemplate));
 
     var tabs = main.querySelectorAll('div.tab');
     main.querySelector('ul.nav').addEventListener('click', event => {
@@ -26,4 +32,4 @@ requirejs(['text!../template/main.html', 'search', 'tracker', 'trader', 'util'],
     [search, tracker, trader].forEach(a => a.init(main));
 
     main.querySelector('ul.nav li a.nav-link.active').click();
-});
+}

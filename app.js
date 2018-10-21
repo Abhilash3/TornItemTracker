@@ -1,17 +1,4 @@
-requirejs.config({
-    baseUrl: 'build',
-    paths: {
-        text: '../lib/text',
-        chart: '../lib/chart.bundle',
+import polyfill from './node_modules/babel-polyfill/browser.js';
+import { init } from './src/main';
 
-        api: 'api',
-        details: 'details',
-        main: 'main',
-        search: 'search',
-        tracker: 'tracker',
-        trader: 'trader',
-        util: 'util'
-    }
-});
-
-requirejs(['text', 'main']);
+init();

@@ -1,101 +1,102 @@
-define(['text!../template/tracker.html', 'api', 'util', 'chart'], (trackerTemplate, api, util, Chart) => {
+import { lowestItemPrice } from './api';
+import { asElement, toMap } from './util';
 
-    const MAX_HISTORY = 2000;
+import Chart from '../lib/chart.bundle.js';
+import trackerTemplate from '../template/tracker.html';
 
-    function randomColor() {
-        var r = Math.floor(Math.random() * 255);
-        var g = Math.floor(Math.random() * 255);
-        var b = Math.floor(Math.random() * 255);
-        return `rgb(${r},${g},${b})`;
-    }
+const MAX_HISTORY = 2000;
 
-    async function trackPrices(items, history) {
-        var prices = await Promise.all(items.map(item => api.lowestItemPrice(item.id)));
+function randomColor() {
+    var r = Math.floor(Math.random() * 255);
+    var g = Math.floor(Math.random() * 255);
+    var b = Math.floor(Math.random() * 255);
+    return `rgb(${r},${g},${b})`;
+}
 
-        chart.data.datasets = items.map((item, n) => {
-            var color = history.get(item.name).color;
-            var values = history.get(item.name).values;
+async function trackPrices(items, history) {
+    var prices = await Promise.all(items.map(item => lowestItemPrice(item.id)));
 
-            if (values.length === MAX_HISTORY) values.shift();
-            values.push(prices[n]);
+    chart.data.datasets = items.map((item, n) => {
+        var color = history.get(item.name).color;
+        var values = history.get(item.name).values;
 
-            return {
-                label: item.name,
-                borderColor: color,
-                pointBorderColor: color,
-                pointBackgroundColor: color,
-                pointHoverBackgroundColor: color,
-                pointHoverBorderColor: color,
-                pointBorderWidth: 5,
-                pointHoverRadius: 5,
-                pointHoverBorderWidth: 1,
-                pointRadius: 0,
-                fill: false,
-                borderWidth: 2,
-                data: values,
-            };
-        });
-        chart.update();
-    }
+        if (values.length === MAX_HISTORY) values.shift();
+        values.push(prices[n]);
 
-    var request;
-    var itemNames;
-    var chart;
+        return {
+            label: item.name,
+            borderColor: color,
+            pointBorderColor: color,
+            pointBackgroundColor: color,
+            pointHoverBackgroundColor: color,
+            pointHoverBorderColor: color,
+            pointBorderWidth: 5,
+            pointHoverRadius: 5,
+            pointHoverBorderWidth: 1,
+            pointRadius: 0,
+            fill: false,
+            borderWidth: 2,
+            data: values,
+        };
+    });
+    chart.update();
+}
 
-    return {
-        init(parent) {
-            var trackerTab = parent.querySelector('#tracker');
-            trackerTab.appendChild(util.asElement(trackerTemplate));
+var request;
+var itemNames;
+var chart;
 
-            var context = trackerTab.querySelector('canvas.chart').getContext('2d');
+export function init(parent) {
+    var trackerTab = parent.querySelector('#tracker');
+    trackerTab.appendChild(asElement(trackerTemplate));
 
-            chart = new Chart(context, {
-                type: 'line',
-                data: {
-                    labels: new Array(MAX_HISTORY).fill(0).map((a, b) => MAX_HISTORY - b),
-                    datasets: []
-                },
-                options: {
-                    responsive: false,
-                    legend: { position: 'top' },
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                fontColor: randomColor(),
-                                fontStyle: 'bold',
-                                beginAtZero: false,
-                                padding: 4
-                            },
-                            gridLines: { drawTicks: false, display: false }
-                        }],
-                        xAxes: [{
-                            gridLines: {
-                                zeroLineColor: randomColor(),
-                                drawTicks: false,
-                                display: false
-                            },
-                            ticks: {
-                                padding: 4,
-                                fontColor: randomColor(),
-                                fontStyle: 'bold'
-                            }
-                        }]
-                    }
-                }
-            });
+    var context = trackerTab.querySelector('canvas.chart').getContext('2d');
+
+    chart = new Chart(context, {
+        type: 'line',
+        data: {
+            labels: new Array(MAX_HISTORY).fill(0).map((a, b) => MAX_HISTORY - b),
+            datasets: []
         },
-
-        track(items) {
-            var names = items.map(item => item.name).sort().join();
-            if (names === itemNames) return;
-
-            itemNames = names;
-            if (request) clearTimeout(request);
-
-            var history = util.toMap(items, a => a.name, () => ({ values: [], color: randomColor() }));
-
-            trackPrices(items, history);
-            request = setInterval(() => trackPrices(items, history), 15 * 1000);
+        options: {
+            responsive: false,
+            legend: { position: 'top' },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        fontColor: randomColor(),
+                        fontStyle: 'bold',
+                        beginAtZero: false,
+                        padding: 4
+                    },
+                    gridLines: { drawTicks: false, display: false }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        zeroLineColor: randomColor(),
+                        drawTicks: false,
+                        display: false
+                    },
+                    ticks: {
+                        padding: 4,
+                        fontColor: randomColor(),
+                        fontStyle: 'bold'
+                    }
+                }]
+            }
         }
-    }
-});
+    });
+}
+
+export function track(items) {
+    var names = items.map(item => item.name).sort().join();
+    if (names === itemNames) return;
+
+    itemNames = names;
+    if (request) clearTimeout(request);
+
+    var history = toMap(items, a => a.name, () => ({ values: [], color: randomColor() }));
+
+    trackPrices(items, history);
+    request = setInterval(() => trackPrices(items, history), 15 * 1000);
+}

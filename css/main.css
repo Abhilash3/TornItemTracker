@@ -16,6 +16,12 @@ body {
     margin: 5px;
 }
 
+.item span.badge {
+    vertical-align: top;
+    margin-bottom: 10px;
+    font-size: 50%;
+}
+
 .hide {
     display: none !important;
 }
