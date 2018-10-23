@@ -1,25 +1,23 @@
-<div>
-    <div class='row'>
-        <div class='col-9'>
-            <div class='input-group mb-3'>
-                <input id='search-item' type='text' class='form-control' placeholder='Search items by...'>
-                <select class='custom-select col-1' id='search-type'>
-                    <option value='name' selected>Name</option>
-                    <option value='type'>Type</option>
-                    <option value='id'>Id</option>
-                </select>
-            </div>
-            <div class='align-center' id='search-result'></div>
+<div class='row'>
+    <div class='col-9'>
+        <div class='input-group mb-3'>
+            <input id='search-item' type='text' class='form-control' placeholder='Search items by...'>
+            <select class='custom-select col-1' id='search-type'>
+                <option value='name' selected>Name</option>
+                <option value='type'>Type</option>
+                <option value='id'>Id</option>
+            </select>
         </div>
-        <div class='col'>
-            <div class='input-group mb-3'>
-                <div class='form-control bg-light'>Selected</div>
-                <div class='input-group-append'>
-                    <button id='export' class='btn btn-secondary' type='button'>Export</button>
-                    <button id='import' class='btn btn-secondary' type='button'>Import</button>
-                </div>
+        <div class='align-center' id='search-result'></div>
+    </div>
+    <div class='col'>
+        <div class='input-group mb-3'>
+            <div class='form-control bg-light'>Selected</div>
+            <div class='input-group-append'>
+                <button id='export' class='btn btn-secondary' type='button'>Export</button>
+                <button id='import' class='btn btn-secondary' type='button'>Import</button>
             </div>
-            <div id='selected'></div>
         </div>
+        <div id='selected'></div>
     </div>
 </div>

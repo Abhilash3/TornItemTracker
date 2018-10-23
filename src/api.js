@@ -1,4 +1,4 @@
-import * as util from './util';
+import { fire, toMap } from './util';
 
 const API_KEY = 'Your Api Key';
 
@@ -24,7 +24,7 @@ function itemPrices(itemId) {
 }
 
 function query(type, id, selections) {
-    return util.query(`https://api.torn.com/${type}/${id}?selections=${selections}&key=${API_KEY}`);
+    return fire(`https://api.torn.com/${type}/${id}?selections=${selections}&key=${API_KEY}`);
 }
 
 function tornQuery(selection) {
@@ -50,6 +50,6 @@ export function lowestItemPrice(itemId) {
 
 export function inventory () {
     return userQuery('inventory')
-        .then(response => response.inventory).catch(err => [])
-        .then(inventory => util.toMap(inventory, a => a.name, a => a.quantity));
+        .then(response => response.inventory || []).catch(err => [])
+        .then(inventory => toMap(inventory, a => a.name, a => a.quantity));
 }

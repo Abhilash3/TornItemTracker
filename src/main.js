@@ -5,8 +5,8 @@ import { asElement } from './util';
 
 import mainTemplate from '../template/main.html';
 
-export function init() {
-    var main = document.querySelector('#main');
+export function init(parent) {
+    var main = parent.querySelector('#main');
     main.appendChild(asElement(mainTemplate));
 
     var tabs = main.querySelectorAll('div.tab');

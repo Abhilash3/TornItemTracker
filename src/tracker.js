@@ -91,9 +91,10 @@ export function init(parent) {
 export function track(items) {
     var names = items.map(item => item.name).sort().join();
     if (names === itemNames) return;
-
     itemNames = names;
-    if (request) clearTimeout(request);
+
+    if (request) clearInterval(request);
+    if (!items.length) return;
 
     var history = toMap(items, a => a.name, () => ({ values: [], color: randomColor() }));
 

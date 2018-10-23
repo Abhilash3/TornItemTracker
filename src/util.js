@@ -34,6 +34,20 @@ export const browser = {
     isBlink, isChrome, isEdge, isFirefox, isIE, isOpera, isSafari
 };
 
+export function closest(element, selector) {
+    while (element !== null && !element.matches(selector)) {
+        element = element.parentNode;
+    }
+    return element;
+}
+
+export function fire(url) {
+    return fetch(url).then(response => response.json()).catch(error => {
+        console.log(error);
+        throw error;
+    });
+}
+
 export function fromClipboard() {
     return new Promise((resolve, reject) => {
         var userInput = this.asElement(userInputTemplate);
@@ -78,13 +92,6 @@ export function toClipboard(string) {
 
     document.execCommand('copy');
     document.body.removeChild(textArea);
-}
-
-export function query(url) {
-    return fetch(url).then(response => response.json()).catch(error => {
-        console.log(error);
-        throw error;
-    });
 }
 
 export function toMap(arr, keyMapper = a => a, valueMapper = a => a) {
