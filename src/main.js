@@ -1,17 +1,17 @@
-import * as search from './search';
-import * as tracker from './tracker';
-import * as trader from './trader';
+import * as search from './tab/search';
+import * as tracker from './tab/tracker';
+import * as trader from './tab/trader';
 import { asElement } from './util';
 
 import mainTemplate from '../template/main.html';
 
 export function init(parent) {
-    var main = parent.querySelector('#main');
+    const main = parent.querySelector('#main');
     main.appendChild(asElement(mainTemplate));
 
-    var tabs = main.querySelectorAll('div.tab');
+    const tabs = main.querySelectorAll('div.tab');
     main.querySelector('ul.nav').addEventListener('click', event => {
-        var tabId = event.target.getAttribute('href');
+        const tabId = event.target.getAttribute('href');
         if (!tabId) return;
 
         event.preventDefault();

@@ -2,30 +2,30 @@ import userInputTemplate from '../template/userInput.html';
 import itemImportTemplate from '../template/itemImport.html';
 
 // Opera 8.0+
-var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+const isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
 
 // Firefox 1.0+
-var isFirefox = typeof InstallTrigger !== 'undefined';
+const isFirefox = typeof InstallTrigger !== 'undefined';
 
 // Safari 3.0+ "[object HTMLElementConstructor]"
-var isSafari = /constructor/i.test(window.HTMLElement) || (function (p) {
+const isSafari = /constructor/i.test(window.HTMLElement) || (function (p) {
     return p.toString() === "[object SafariRemoteNotification]";
 })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
 
 // Internet Explorer 6-11
-var isIE = /*@cc_on!@*/false || !!document.documentMode;
+const isIE = /*@cc_on!@*/false || !!document.documentMode;
 
 // Edge 20+
-var isEdge = !isIE && !!window.StyleMedia;
+const isEdge = !isIE && !!window.StyleMedia;
 
 // Chrome 1+
-var isChrome = !!window.chrome && !!window.chrome.webstore;
+const isChrome = !!window.chrome && !!window.chrome.webstore;
 
 // Blink engine detection
-var isBlink = (isChrome || isOpera) && !!window.CSS;
+const isBlink = (isChrome || isOpera) && !!window.CSS;
 
 export function asElement(str) {
-    let template = document.createElement('template');
+    const template = document.createElement('template');
     template.innerHTML = str.trim();
     return template.content.firstChild;
 }
@@ -33,13 +33,6 @@ export function asElement(str) {
 export const browser = {
     isBlink, isChrome, isEdge, isFirefox, isIE, isOpera, isSafari
 };
-
-export function closest(element, selector) {
-    while (element !== null && !element.matches(selector)) {
-        element = element.parentNode;
-    }
-    return element;
-}
 
 export function fire(url) {
     return fetch(url).then(response => response.json()).catch(error => {
@@ -49,23 +42,23 @@ export function fire(url) {
 }
 
 export function fromClipboard() {
-    return new Promise((resolve, reject) => {
-        var userInput = this.asElement(userInputTemplate);
-        var itemImport = this.asElement(itemImportTemplate);
+    return new Promise(resolve => {
+        const userInput = asElement(userInputTemplate);
+        const itemImport = asElement(itemImportTemplate);
 
         ['.modal-header', '.modal-footer'].forEach(selector => {
-            var elem = userInput.querySelector(selector);
+            const elem = userInput.querySelector(selector);
             elem.parentNode.removeChild(elem)
         });
 
         userInput.querySelector('.modal-body').appendChild(itemImport);
 
-        var submit = itemImport.querySelector('#submit');
-        var cancel = itemImport.querySelector('#cancel');
-        var input = itemImport.querySelector('input');
+        const submit = itemImport.querySelector('#submit');
+        const cancel = itemImport.querySelector('#cancel');
+        const input = itemImport.querySelector('input');
 
         submit.addEventListener('click', () => {
-            var value = input.value || '';
+            const value = input.value || '';
             document.body.removeChild(userInput);
             resolve(value.trim());
         });
@@ -73,9 +66,9 @@ export function fromClipboard() {
             document.body.removeChild(userInput);
             resolve('');
         });
-        input.addEventListener('keyup', event => {
-            if (event.keyCode === 13) submit.click();
-            if (event.keyCode === 27) cancel.click();
+        input.addEventListener('keyup', ({keyCode}) => {
+            if (keyCode === 13) submit.click();
+            if (keyCode === 27) cancel.click();
         });
 
         document.body.appendChild(userInput);
@@ -83,11 +76,18 @@ export function fromClipboard() {
     });
 }
 
+export function randomColor() {
+    const r = Math.floor(Math.random() * 255);
+    const g = Math.floor(Math.random() * 255);
+    const b = Math.floor(Math.random() * 255);
+    return `rgb(${r},${g},${b})`;
+}
+
 export function toClipboard(string) {
-    var textArea = document.createElement('textarea');
+    const textArea = document.createElement('textarea');
     textArea.setAttribute('style', 'width: 1px; border: 0; opacity: 0;');
     document.body.appendChild(textArea);
-    textArea.value = string.trim();
+    textArea.value = string;
     textArea.select();
 
     document.execCommand('copy');

@@ -1,24 +1,55 @@
 <div>
-    <table id='calc' class='table'>
+    <table id='calc' class='table table-borderless table-striped'>
         <thead>
             <tr class='row'>
-                <th class='col'>Item</th>
-                <th class='col'>Market Price</th>
-                <th class='col'>Your Price</th>
-                <th class='col'>Item count</th>
-                <th class='col-3'>Value</th>
+                <th class='col'>
+                    <div class='input-group'>
+                        <div class='form-control bg-light'>Item</div>
+                    </div>
+                </th>
+                <th class='col'>
+                    <div class='input-group'>
+                        <div class='form-control bg-light'>Market</div>
+                        <div class='input-group-append'>
+                            <button id='price-refresh' class='btn btn-secondary' type='button'>
+                                <i class='fas fa-sync-alt'></i>
+                            </button>
+                        </div>
+                    </div>
+                </th>
+                <th class='col'>
+                    <div class='input-group'>
+                        <div class='form-control bg-light'>Price</div>
+                    </div>
+                </th>
+                <th class='col'>
+                    <div class='input-group'>
+                        <div class='form-control bg-light'>Inventory</div>
+                        <div class='input-group-append'>
+                            <button id='inventory-refresh' class='btn btn-secondary' type='button'>
+                                <i class='fas fa-sync-alt'></i>
+                            </button>
+                        </div>
+                    </div>
+                </th>
+                <th class='col'>
+                    <div class='input-group'>
+                        <div id='count' class='form-control bg-light'></div>
+                    </div>
+                </th>
+                <th class='col'>
+                    <div class='input-group'>
+                        <div id='total' class='form-control bg-light'></div>
+                        <div class='input-group-append'>
+                            <button id='trade-copy' class='btn btn-secondary' type='button'>
+                                <i class='fas fa-clipboard'></i>
+                            </button>
+                        </div>
+                    </div>
+                </th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
     <br/>
-    <div class='container'>
-        <div class='row'>
-            <div class='col'><strong>Total:</strong></div>
-            <div class='col' id='total'>0</div>
-            <div class='col-1'>
-                <button id='copy' class='btn btn-secondary' type='button'>Copy</button>
-            </div>
-        </div>
-    </div>
 </div>
