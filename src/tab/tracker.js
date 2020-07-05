@@ -12,28 +12,29 @@ let request;
 let chart;
 
 function updateDatasets(filter = () => true) {
-    chart.data.datasets = Array.from(history).filter(([name, log]) => filter(name, log)).map(([name, log]) => {
-        return {
-            borderColor: log.color,
+    chart.data.datasets = Array.from(history)
+        .filter(([name, log]) => filter(name, log))
+        .map(([name, {color, values}]) => ({
+            borderColor: color,
             borderWidth: 2,
-            data: log.values,
+            data: values,
             fill: false,
             label: name,
-            pointBackgroundColor: log.color,
-            pointBorderColor: log.color,
+            pointBackgroundColor: color,
+            pointBorderColor: color,
             pointBorderWidth: 5,
-            pointHoverBackgroundColor: log.color,
-            pointHoverBorderColor: log.color,
+            pointHoverBackgroundColor: color,
+            pointHoverBorderColor: color,
             pointHoverBorderWidth: 1,
             pointHoverRadius: 5,
             pointRadius: 0,
-        };
-    });
+        }));
     chart.update();
 }
 
-function resetColors() {
-    Array.from(history).forEach(([, log]) => log.color = randomColor());
+function resetColor(name) {
+    const log = history.get(name);
+    if (log) log.color = randomColor();
     updateDatasets();
 }
 
@@ -41,8 +42,8 @@ function trackPrices() {
     request = setTimeout(trackPrices, 15 * 1000);
     if (!chart) return;
 
-    Promise.all(items.map(item => priceDetails(item.id).then(prices => ({name: item.name, price: prices[0][0]})))).then(prices => {
-        const priceMap = new Map(prices.map(({name, price}) => [name, price]));
+    Promise.all(items.map(({id, name}) => priceDetails(id).then(prices => [name, prices[0][0]]))).then(prices => {
+        const priceMap = new Map(prices);
         updateDatasets((name, {values}) => {
             values.shift();
             values.push(priceMap.get(name));
@@ -66,7 +67,7 @@ export function init(parent) {
         options: {
             animation: { duration: 0 },
             legend: {
-                onClick: resetColors,
+                onClick: (e, {text}) => resetColor(text),
                 position: 'top',
             },
             responsive: false,
@@ -101,9 +102,9 @@ export function init(parent) {
 
 export function track(toTrack) {
     items.length = toTrack.length;
-    toTrack.forEach((item, i) => {
-        items[i] = item;
-        history.set(item.name, history.get(item.name) || { values: new Array(MAX_HISTORY), color: randomColor() });
+    toTrack.forEach(({id, name}, i) => {
+        items[i] = {id, name};
+        history.set(name, history.get(name) || {values: new Array(MAX_HISTORY), color: randomColor()});
     });
     
     if (!request) trackPrices();
