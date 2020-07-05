@@ -11,35 +11,46 @@ const items = [];
 let request;
 let chart;
 
+function updateDatasets(filter = () => true) {
+    chart.data.datasets = Array.from(history).filter(([name, log]) => filter(name, log)).map(([name, log]) => {
+        return {
+            borderColor: log.color,
+            borderWidth: 2,
+            data: log.values,
+            fill: false,
+            label: name,
+            pointBackgroundColor: log.color,
+            pointBorderColor: log.color,
+            pointBorderWidth: 5,
+            pointHoverBackgroundColor: log.color,
+            pointHoverBorderColor: log.color,
+            pointHoverBorderWidth: 1,
+            pointHoverRadius: 5,
+            pointRadius: 0,
+        };
+    });
+    chart.update();
+}
+
+function resetColors() {
+    Array.from(history).forEach(([, log]) => log.color = randomColor());
+    updateDatasets();
+}
+
 function trackPrices() {
     request = setTimeout(trackPrices, 15 * 1000);
     if (!chart) return;
 
     Promise.all(items.map(item => priceDetails(item.id).then(prices => ({name: item.name, price: prices[0][0]})))).then(prices => {
         const priceMap = new Map(prices.map(({name, price}) => [name, price]));
-        chart.data.datasets = Array.from(history).map(([name, {values, color}]) => {
+        updateDatasets((name, {values}) => {
             values.shift();
             values.push(priceMap.get(name));
-
-            if (!values.some(a => a)) history.delete(name);
-
-            return {
-                borderColor: color,
-                borderWidth: 2,
-                data: values,
-                fill: false,
-                label: name,
-                pointBackgroundColor: color,
-                pointBorderColor: color,
-                pointBorderWidth: 5,
-                pointHoverBackgroundColor: color,
-                pointHoverBorderColor: color,
-                pointHoverBorderWidth: 1,
-                pointHoverRadius: 5,
-                pointRadius: 0,
-            };
+            
+            const isValid = values.some(a => a);
+            if (!isValid) history.delete(name);
+            return isValid;
         });
-        chart.update();
     });
 }
 
@@ -54,7 +65,10 @@ export function init(parent) {
         },
         options: {
             animation: { duration: 0 },
-            legend: { position: 'top' },
+            legend: {
+                onClick: resetColors,
+                position: 'top',
+            },
             responsive: false,
             scales: {
                 xAxes: [{
@@ -92,6 +106,5 @@ export function track(toTrack) {
         history.set(item.name, history.get(item.name) || { values: new Array(MAX_HISTORY), color: randomColor() });
     });
     
-    if (request) clearTimeout(request);
-    trackPrices();
+    if (!request) trackPrices();
 }
