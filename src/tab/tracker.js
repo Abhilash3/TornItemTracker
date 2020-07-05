@@ -87,10 +87,10 @@ export function init(parent) {
 
 export function track(toTrack) {
     items.length = toTrack.length;
-	toTrack.forEach((item, i) => {
-		items[i] = item;
-		history.set(item.name, history.get(item.name) || { values: new Array(MAX_HISTORY), color: randomColor() });
-	});
+    toTrack.forEach((item, i) => {
+        items[i] = item;
+        history.set(item.name, history.get(item.name) || { values: new Array(MAX_HISTORY), color: randomColor() });
+    });
     
     if (request) clearTimeout(request);
     trackPrices();

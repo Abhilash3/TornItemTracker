@@ -15,11 +15,11 @@ const OPERATOR_TYPES = Object.keys(OPERATORS).sort((a, b) => b.length - a.length
 
 function createQuery(string) {
     let operator = OPERATOR_TYPES.find(type => string.includes(type));
-	if (!operator) {
-		operator = ':';
-		string = `name:${string}`;
-	}
-	const [prop, value] = string.split(operator).map(a => a.trim());
+    if (!operator) {
+        operator = ':';
+        string = `name:${string}`;
+    }
+    const [prop, value] = string.split(operator).map(a => a.trim());
     return (item) => OPERATORS[operator](item[prop], value);
 }
 
