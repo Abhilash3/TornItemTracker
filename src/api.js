@@ -16,7 +16,7 @@ function cacheWrapped(service, resetTime = DEFAULT_RESET_TIME) {
     }
 }
 
-function clone(item, props) {
+function clone(item, props = {}) {
     return Object.keys(props).reduce((clone, prop) => {
         clone[prop] = props[prop];
         return clone;
