@@ -2,25 +2,27 @@
   "name": "torn_item_tracker",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "build": "webpack",
-    "start": "http-server -a localhost -p 8080",
-    "build-start": "npm run build && npm run start"
+    "test": "webpack-dev-server --open",
+    "start": "http-server -a localhost -p 8080"
   },
   "author": "avedwan",
   "license": "ISC",
   "dependencies": {
+    "@babel/polyfill": "^7.10.4",
+    "chart.js": "^2.9.3",
     "html-loader": "^0.5.5",
-    "http-server": "^0.11.1"
+    "http-server": "^0.12.3"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.5",
-    "babel-polyfill": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
-    "webpack": "^4.21.0",
-    "webpack-cli": "^3.1.2"
+    "@babel/cli": "^7.10.4",
+    "@babel/core": "^7.10.4",
+    "@babel/preset-env": "^7.10.4",
+    "babel-loader": "^8.1.0",
+    "css-loader": "^3.6.0",
+    "style-loader": "^1.2.1",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
   }
 }

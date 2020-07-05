@@ -1,4 +1,4 @@
-import polyfill from './node_modules/babel-polyfill/browser.js';
+import './css/main.css';
 import { init } from './src/main';
 
 init(document.body);

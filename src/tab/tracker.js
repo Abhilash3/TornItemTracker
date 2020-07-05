@@ -1,6 +1,6 @@
 import { priceDetails } from '../api';
 import { asElement, randomColor, toMap } from '../util';
-import Chart from '../../lib/chart.bundle';
+import Chart from 'chart.js';
 
 import trackerTemplate from '../../template/tracker.html';
 

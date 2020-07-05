@@ -1,8 +1,6 @@
-var path = require('path');
-
 module.exports = {
     entry: { index: './app.js' },
-    devtool: 'sourcemaps',
+    devtool: 'source-map',
     cache: true,
     output: {
         path: __dirname,
@@ -13,16 +11,16 @@ module.exports = {
             {
                 test: /\.js$/,
                 exclude: /(node_modules)/,
-                use: {
-                    loader: 'babel-loader',
-                }
+                use: [ 'babel-loader', ],
             }, {
                 test: /\.html$/,
                 exclude: /(node_modules)/,
-                use: {
-                    loader: 'html-loader',
-                }
-            }
+                use: [ 'html-loader', ],
+            }, {
+                test: /\.css$/,
+                exclude: /(node_modules)/,
+                use: [ 'style-loader', 'css-loader', ],
+            },
         ]
     }
 };
