@@ -1,13 +1,14 @@
 body {
     text-align: center;
+}
+
+.dark {
     filter: invert(1)hue-rotate(180deg);
     background-color: black;
 }
 
 #main {
-    margin-right: auto;
-    margin-left: auto;
-    width: 96%;
+    padding: 0px 20px;
 }
 
 #container {

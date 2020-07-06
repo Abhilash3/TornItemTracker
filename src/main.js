@@ -10,7 +10,7 @@ export function init(parent) {
     main.appendChild(asElement(mainTemplate));
 
     const tabs = main.querySelectorAll('div.tab');
-    main.querySelector('ul.nav').addEventListener('click', event => {
+    main.querySelector('ul.navbar-nav').addEventListener('click', event => {
         const tabId = event.target.getAttribute('href');
         if (!tabId) return;
 
@@ -26,10 +26,26 @@ export function init(parent) {
         });
     });
 
+    const dark = main.querySelector('#dark');
+    const light = main.querySelector('#light');
+
+    light.addEventListener('click', () => {
+        light.classList.add('hide');
+        dark.classList.remove('hide');
+        parent.classList.remove('dark');
+    });
+
+    dark.addEventListener('click', () => {
+        dark.classList.add('hide');
+        light.classList.remove('hide');
+        parent.classList.add('dark');
+    });
+
     main.querySelector('#track-tab').addEventListener('click', async () => tracker.track(await search.selected()));
     main.querySelector('#trade-tab').addEventListener('click', async () => trader.trade(await search.selected()));
 
     [search, tracker, trader].forEach(a => a.init(main));
 
-    main.querySelector('ul.nav li a.nav-link.active').click();
+    main.querySelector('ul.navbar-nav li.nav-item.active a.nav-link').click();
+    dark.click();
 }

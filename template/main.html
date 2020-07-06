@@ -1,9 +1,17 @@
 <div>
-    <ul class='nav navbar-expand-lg navbar-light pt-2'>
-        <li><h5><a id='search-tab' class='nav-link active' href='#search'>Search</a></h5></li>
-        <li><h5><a id='track-tab' class='nav-link' href='#tracker'>Track</a></h5></li>
-        <li><h5><a id='trade-tab' class='nav-link' href='#trader'>Trade</a></h5></li>
-    </ul>
+    <nav class='navbar navbar-expand-lg'>
+        <div class='navbar-collapse'>
+            <ul class='navbar-nav mr-auto'>
+                <li class='nav-item active'><h5><a id='search-tab' class='nav-link' href='#search'>Search</a></h5></li>
+                <li class='nav-item'><h5><a id='track-tab' class='nav-link' href='#tracker'>Track</a></h5></li>
+                <li class='nav-item'><h5><a id='trade-tab' class='nav-link' href='#trader'>Trade</a></h5></li>
+            </ul>
+            <div class='form-inline my-2 my-lg-0'>
+                <button id='light' class='btn btn-outline-dark my-2 my-sm-0'>Light</button>
+                <button id='dark' class='btn btn-outline-secondary my-2 my-sm-0'>Dark</button>
+            </div>
+        </div>
+    </nav>
     <div id='search' class='tab'></div>
     <div id='tracker' class='tab'></div>
     <div id='trader' class='tab'></div>
