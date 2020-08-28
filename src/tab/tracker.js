@@ -1,12 +1,13 @@
 import { priceDetails } from '../api';
-import { asElement, randomColor, toMap } from '../util';
+import { asDoller, asElement, randomColor, toMap } from '../util';
 import Chart from 'chart.js';
 
 import trackerTemplate from '../../template/tracker.html';
 
-const MAX_HISTORY = 200;
+const MAX_HISTORY = 1000;
 const history = new Map();
-const items = [];
+const items = new Map();
+const interest = new Set();
 
 let request;
 let chart;
@@ -32,24 +33,24 @@ function updateDatasets(filter = () => true) {
     chart.update();
 }
 
-function resetColor(name) {
-    const log = history.get(name);
-    if (log) log.color = randomColor();
-    updateDatasets();
-}
-
 function trackPrices() {
     request = setTimeout(trackPrices, 15 * 1000);
     if (!chart) return;
 
-    Promise.all(items.map(({id, name}) => priceDetails(id).then(prices => [name, prices[0][0]]))).then(prices => {
+    const max = (values) => values.reduce((a, b) => Math.max(a, b), -1);
+    Promise.all(Array.from(items).map(([name, id]) => priceDetails(id).then(prices => [name, prices[0][0]]))).then(prices => {
         const priceMap = new Map(prices);
         updateDatasets((name, {values}) => {
+            const value = priceMap.get(name);
             values.shift();
-            values.push(priceMap.get(name));
-            
+            values.push(value);
+
             const isValid = values.some(a => a);
             if (!isValid) history.delete(name);
+
+            if (value && (1 - value / max(values)) >= 0.8) interest.add(name);
+            else interest.delete(name);
+
             return isValid;
         });
     });
@@ -59,6 +60,21 @@ export function init(parent) {
     const trackerTab = parent.querySelector('#tracker');
     trackerTab.appendChild(asElement(trackerTemplate));
 
+    const notice = trackerTab.querySelector('#notice');
+    notice.addEventListener('click', event => {
+        if (!event.target.classList.contains('item')) return;
+
+        event.preventDefault();
+        window.open(`https://www.torn.com/imarket.php#/p=shop&step=shop&type=${event.target.dataset.id}`);
+    });
+    setInterval(() => {
+        notice.innerHTML = '';
+        Array.from(interest).forEach(name => {
+            const id = items.get(name);
+            notice.appendChild(asElement(`<div class='item bg-light rounded d-lg-inline-flex p-2' id='notice-${id}' data-id='${id}'>${name}</div>`));
+        });
+    }, 15 * 1000);
+
     chart = new Chart(trackerTab.querySelector('canvas.chart').getContext('2d'), {
         data: {
             datasets: [],
@@ -66,8 +82,13 @@ export function init(parent) {
         },
         options: {
             animation: { duration: 0 },
+            elements: { line: { tension: 0 } },
             legend: {
-                onClick: (e, {text}) => resetColor(text),
+                onClick: (e, {text}) => {
+                    const log = history.get(text);
+                    if (log) log.color = randomColor();
+                    updateDatasets();
+                },
                 position: 'top',
             },
             responsive: false,
@@ -88,24 +109,30 @@ export function init(parent) {
                     gridLines: { display: false, drawTicks: false },
                     ticks: {
                         beginAtZero: false,
+                        callback: asDoller,
                         fontColor: randomColor(),
                         fontStyle: 'bold',
                         padding: 4,
                     },
                 }],
             },
-            tooltips: { mode: 'index' },
+            tooltips: {
+                callbacks: {
+                    label: ({datasetIndex, yLabel}, {datasets}) => `${datasets[datasetIndex].label}: ${asDoller(yLabel)}`,
+                },
+                mode: 'index',
+            },
         },
         type: 'line',
     });
 }
 
 export function track(toTrack) {
-    items.length = toTrack.length;
+    items.clear();
     toTrack.forEach(({id, name}, i) => {
-        items[i] = {id, name};
+        items.set(name, id);
         history.set(name, history.get(name) || {values: new Array(MAX_HISTORY), color: randomColor()});
     });
-    
+
     if (!request) trackPrices();
 }
