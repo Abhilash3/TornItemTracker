@@ -1,10 +1,11 @@
 import { inventory, priceDetails } from '../api';
-import { asElement, toClipboard } from '../util';
+import { asDoller, asElement, toClipboard, toMap } from '../util';
 
-import plusMinusTemplate from '../../template/plusMinus.html';
+import counterTemplate from '../../template/counter.html';
+import tradeRowTemplate from '../../template/tradeRow.html';
 import traderTemplate from '../../template/trader.html';
 
-(function() {
+(() => {
     if (!Element.prototype.matches) {
         Element.prototype.matches = Element.prototype.msMatchesSelector;
     }
@@ -17,31 +18,13 @@ function closest(element, selector) {
     return element;
 }
 
-function pricesToHtml(prices) {
-    return prices.reduce((acc, a) => `${acc}<div class='m-auto p-1'><div>${a[0]}</div><div>${a[1]}</div></div>`, '');
-}
+const asHtml = (() => {
+    const templated = (price, count) => `<div class='m-auto p-1'><div>${asDoller(price)}</div><div>${count}</div></div>`;
+    return (prices) => prices.map(([a, b]) => templated(Number(a), b)).reduce((a, b) => a + b, '');
+})();
 
-function calculators(items, prices, userItems) {
-    return items.map(({id, name}, n) => {
-        const quantity = userItems.get(name) || 0;
-        const element = asElement(`
-            <tr data-id='${id}' class='row item-calc'>
-                <td class='col m-auto name'><label class='col-form-label'>${name}</label></td>
-                <td class='col m-auto price d-flex flex-wrap'>${pricesToHtml(prices[n])}</td>
-                <td class='col m-auto'><input type='number' class='form-control' placeholder='0' /></td>
-                <td class='col m-auto inventory'><label class='col-form-label'>${quantity}</label></td>
-                <td class='col m-auto count'></td>
-                <td class='col m-auto'><label class='col-form-label value'>0</label></td>
-            </tr>`);
-        element.querySelector('.count').appendChild(plusMinusElement(0, quantity));
-        count.innerHTML = Number(count.innerHTML) + quantity;
-
-        return element;
-    });
-}
-
-function plusMinusElement(min = 0, max = 0, value = max) {
-    const element = asElement(plusMinusTemplate);
+function createCounter(min = 0, max = 0, value = max) {
+    const element = asElement(counterTemplate);
     element.setAttribute('data-min', min);
     element.setAttribute('data-max', max);
     element.querySelector('input').value = value;
@@ -49,20 +32,18 @@ function plusMinusElement(min = 0, max = 0, value = max) {
     return element;
 }
 
-function triggerUpdate({target}) {
-    const tr = closest(target, 'tr');
-    const [{value: price}, {value: count}] = tr.querySelectorAll('input');
-
-    tr.querySelector('.value').innerHTML = Number(price) * Number(count);
-
-    total.innerHTML = Array.prototype.reduce.call(
-        tbody.querySelectorAll('.value'), (sum, elem) => sum + Number(elem.innerText), 0);
+function createTradeRow({id, name}) {
+    const element = asElement(tradeRowTemplate);
+    element.setAttribute('data-id', id);
+    element.querySelector('td.name > label').innerHTML = name;
+    element.querySelector('td.value > label').innerHTML = 0;
+    
+    return element;
 }
 
-var tbody;
-var count;
-var total;
-var itemNames;
+let tbody;
+let count;
+let total;
 
 export function init(parent) {
     const traderTab = parent.querySelector('#trader');
@@ -71,6 +52,16 @@ export function init(parent) {
     tbody = traderTab.querySelector('table#calc tbody');
     count = traderTab.querySelector('#count');
     total = traderTab.querySelector('#total');
+
+    const triggerUpdate = ({target}) => {
+        const tr = closest(target, 'tr');
+        const [{value: price}, {value: count}] = tr.querySelectorAll('input');
+
+        tr.querySelector('td.value > label').innerHTML = Number(price) * Number(count);
+
+        total.innerHTML = Array.prototype.reduce.call(
+            tbody.querySelectorAll('td.value > label'), (sum, elem) => sum + Number(elem.innerText), 0);
+    };
 
     tbody.addEventListener('keyup', triggerUpdate);
     tbody.addEventListener('click', event => {
@@ -100,7 +91,7 @@ export function init(parent) {
         const rows = tbody.querySelectorAll('tr.item-calc');
         const prices = await Promise.all(Array.prototype.map.call(rows, row => priceDetails(row.dataset.id)));
 
-        rows.forEach((row, n) => row.querySelector('.price').innerHTML = pricesToHtml(prices[n]));
+        rows.forEach((row, n) => row.querySelector('.price').innerHTML = asHtml(prices[n]));
     });
 
     traderTab.querySelector('#inventory-refresh').addEventListener('click', async () => {
@@ -115,15 +106,14 @@ export function init(parent) {
     });
 
     traderTab.querySelector('#trade-copy').addEventListener('click', () => {
-        const rows = tbody.querySelectorAll('tr.item-calc');
         const text = td => td.innerText;
         const value = td => Number(td.querySelector('input').value);
 
-        const log = Array.prototype.reduce.call(rows, (acc, calc) => {
-            const tds = calc.querySelectorAll('td');
-            if (tds.length < 6 || text(tds[5]) == 0) return acc;
+        const log = Array.prototype.reduce.call(tbody.querySelectorAll('tr.item-calc'), (acc, calc) => {
+            const [label, , price, , count, total] = calc.querySelectorAll('td');
+            if (!total || !Number(text(total))) return acc;
 
-            return `${acc}${text(tds[0])} ${value(tds[2])} * ${value(tds[4])} = ${text(tds[5])}\n`;
+            return `${acc}${text(label)} ${value(price)} * ${value(count)} = ${text(total)}\n`;
         }, '');
 
         if (log !== '') toClipboard(`${log}\nTotal: ${text(total)}`);
@@ -131,18 +121,35 @@ export function init(parent) {
 }
 
 export function trade(items) {
-    const names = items.map(item => item.name).sort().join();
-    if (itemNames === names) return;
-    itemNames = names;
+    const itemMap = toMap(items, a => a.name);
+    let countValue = Number(count.innerHTML), totalValue = Number(total.innerHTML);
+    Array.prototype.forEach.call(tbody.querySelectorAll('tr'), tr => {
+        if (!itemMap.has(tr.querySelector('td.name > label').innerHTML)) {
+            countValue -= Number(tr.querySelector('td.inventory > label').innerHTML);
+            totalValue -= Number(tr.querySelector('td.value > label').innerHTML);
+            tbody.removeChild(tr);
+        }
+    });
+    total.innerHTML = totalValue;
+    count.innerHTML = countValue;
 
-    tbody.innerHTML = '';
-    total.innerHTML = '0';
-    count.innerHTML = '0';
+    items.filter(({id}) => !tbody.querySelector(`tr[data-id='${id}']`)).forEach(item => tbody.appendChild(createTradeRow(item)));
 
-    if (!items.length) return;
+    const prices = Promise.all(items.map(({id, name}) => priceDetails(id).then(prices => [name, prices]))).then(prices => new Map(prices));
+    Promise.all([prices, inventory()]).then(([prices, userItems]) => {
+        Array.prototype.forEach.call(tbody.querySelectorAll('tr'), tr => {
+            const name = tr.querySelector('td.name > label').innerHTML;
+            const quantity = userItems.get(name) || 0;
 
-    const prices = Promise.all(items.map(({id}) => priceDetails(id)));
-    const userItems = inventory();
+            tr.querySelector('td.price').innerHTML = asHtml(prices.get(name) || []);
+            tr.querySelector('td.inventory > label').innerHTML = quantity;
 
-    (async () => calculators(items, await prices, await userItems).forEach(elem => tbody.appendChild(elem)))();
+            const counter = tr.querySelector('td.count');
+            if (counter.querySelector('.plus-minus') == null) {
+                counter.appendChild(createCounter(0, quantity));
+                countValue += quantity;
+            }
+        });
+        count.innerHTML = countValue;
+    });
 }
