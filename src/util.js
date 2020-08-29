@@ -32,8 +32,8 @@ export const fromClipboard = (() => {
 
     userInput.querySelector('.modal-body').appendChild(itemImport);
 
-    const submit = itemImport.querySelector('#submit');
-    const cancel = itemImport.querySelector('#cancel');
+    let submit = itemImport.querySelector('#submit');
+    let cancel = itemImport.querySelector('#cancel');
     const input = itemImport.querySelector('input');
 
     input.addEventListener('keyup', ({keyCode}) => {
@@ -46,8 +46,14 @@ export const fromClipboard = (() => {
             const handle = value => {
                 document.body.removeChild(userInput);
                 resolve(value);
-                submit.outerHTML = submit.outerHTML;
-                cancel.outerHTML = cancel.outerHTML;
+
+                const newSubmit = submit.cloneNode(true);
+                submit.parentNode.replaceChild(newSubmit, submit);
+                submit = newSubmit;
+
+                const newCancel = cancel.cloneNode(true);
+                cancel.parentNode.replaceChild(newCancel, cancel);
+                cancel = newCancel;
             };
             cancel.addEventListener('click', () => handle(''));
             submit.addEventListener('click', () => handle((input.value || '').trim()));
