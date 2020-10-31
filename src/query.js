@@ -20,12 +20,12 @@ function createQuery(string) {
         string = `name:${string}`;
     }
     const [prop, value] = string.split(operator).map(a => a.trim());
-    return (item) => OPERATORS[operator](item[prop], value);
+    return item => OPERATORS[operator](item[prop], value);
 }
 
 const wrap = (queries, wrapper) => queries.length > 1 ? wrapper(queries) : queries[0];
-const wrapAnd = (queries) => wrap(queries, a => (item) => a.every(b => b(item)));
-const wrapOr = (queries) => wrap(queries, a => (item) => a.some(b => b(item)));
+const wrapAnd = queries => wrap(queries, a => item => a.every(b => b(item)));
+const wrapOr = queries => wrap(queries, a => item => a.some(b => b(item)));
 
 function closingTag(string, start) {
     let count = 1, i = start + 1;
@@ -37,12 +37,12 @@ function closingTag(string, start) {
     return i;
 }
 
-const IGNORED_CHARS = {')': true, '|': true};
+const IGNORED = new Set([')', '|']);
 
 export function parseQuery(string) {
     if (string.length === 0) return () => true;
-    const andLoc = string.indexOf('&'), orLoc = string.indexOf('|');
-    if (orLoc === 0 || andLoc === 0 || orLoc === string.length - 1 || andLoc === string.length - 1) return () => false;
+    const andLoc = string.indexOf('&');
+    if (andLoc === 0 || andLoc === string.length - 1) return () => false;
 
     const input = string.split(' ').map(a => a.trim()).filter(a => a).join(' ');
     const items = [];
@@ -50,8 +50,8 @@ export function parseQuery(string) {
     Object.defineProperty(items, 'secLast', {get: () => items[items.length - 2]});
     
     for (let i = 0; i < input.length; i++) {
-        if (IGNORED_CHARS[input[i]]) continue;
-        
+        if (IGNORED.has(input[i])) continue;
+
         if (input[i] === '&') {
             if (items.last != '&') items.push(input[i]);
             continue;

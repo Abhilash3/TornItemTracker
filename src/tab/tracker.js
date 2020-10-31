@@ -12,9 +12,9 @@ const interest = new Set();
 let request;
 let chart;
 
-function updateDatasets(filter = () => true) {
+function updateDatasets(process = () => true) {
     chart.data.datasets = Array.from(history)
-        .filter(([name, log]) => filter(name, log))
+        .filter(([name, log]) => process(name, log))
         .map(([name, {color, values}]) => ({
             borderColor: color,
             borderWidth: 2,
@@ -38,7 +38,8 @@ function trackPrices() {
     if (!chart) return;
 
     const max = (values) => values.reduce((a, b) => Math.max(a, b), -1);
-    Promise.all(Array.from(items).map(([name, id]) => priceDetails(id).then(prices => [name, prices[0][0]]))).then(prices => {
+    const priceWithDelay = (id, i) => new Promise(res => setTimeout(() => res(priceDetails(id)), i * 1000));
+    Promise.all(Array.from(items).map(([name, id], i) => priceWithDelay(id, i).then(prices => [name, prices[0][0]]))).then(prices => {
         const priceMap = new Map(prices);
         updateDatasets((name, {values}) => {
             const value = priceMap.get(name);
@@ -73,7 +74,7 @@ export function init(parent) {
             const id = items.get(name);
             notice.appendChild(asElement(`<div class='item bg-light rounded d-lg-inline-flex p-2' id='notice-${id}' data-id='${id}'>${name}</div>`));
         });
-    }, 15 * 1000);
+    }, 5 * 1000);
 
     chart = new Chart(trackerTab.querySelector('canvas.chart').getContext('2d'), {
         data: {

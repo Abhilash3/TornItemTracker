@@ -16,10 +16,10 @@ export function init(parent) {
     const searchTab = parent.querySelector('#search');
     searchTab.appendChild(asElement(searchTemplate));
 
-    const searchResults = searchTab.querySelector('div#search-result');
+    const searched = searchTab.querySelector('div#searched');
     const selected = searchTab.querySelector('div#selected');
 
-    searchResults.addEventListener('click', event => {
+    searched.addEventListener('click', event => {
         const target = findTarget(event);
         if (!target) return;
 
@@ -34,62 +34,59 @@ export function init(parent) {
         if (!target) return;
 
         event.preventDefault();
-        searchResults.querySelector(`#item-${target.dataset.id}`).classList.remove('hide');
+        searched.querySelector(`#item-${target.dataset.id}`).classList.remove('hide');
         target.parentNode.removeChild(target);
     });
 
     searchTab.querySelector('#export').addEventListener('click', event => {
-        const items = selected.querySelectorAll('.item');
-        toClipboard(Array.prototype.map.call(items, elem => elem.dataset.id).toString());
+        toClipboard(Array.prototype.map.call(selected.querySelectorAll('.item'), elem => elem.dataset.id).join(','));
     });
 
     searchTab.querySelector('#import').addEventListener('click', async () => {
         const selectedIds = Array.prototype.map.call(selected.querySelectorAll('.item'), a => a.dataset.id);
 
-        const str  = await fromClipboard();
-        str.split(',')
-            .map(a => searchResults.querySelector(`#item-${a.trim()}`))
+        (await fromClipboard()).split(',')
+            .map(a => searched.querySelector(`#item-${a.trim()}`))
             .filter(a => a && !selectedIds.includes(a.dataset.id))
             .forEach(elem => elem.click());
     });
 
-    const createBadge = (q) => `<span class='badge badge-secondary'>${q}</span>`;
+    const createBadge = count => `<span class='badge badge-secondary'>${count}</span>`;
 
     Promise.all([items, inventory()]).then(([items, userItems]) => {
+        const itemDomList = [];
         items.forEach((item) => {
             const {id, name} = item;
             const quantity = userItems.get(name) || 0;
-            searchResults.appendChild(asElement(`
-                <div class='item bg-light rounded d-lg-inline-flex p-2' id='item-${id}' data-id='${id}'>
-                    <span>${name}</span>
-                    ${quantity && createBadge(quantity) || ''}
-                </div>`));
             item.count = quantity;
+            const element = asElement(`
+                <div class='item bg-light rounded d-lg-inline-flex p-2' id='item-${id}' data-id='${id}'>
+                    <span>${name}</span>${quantity && createBadge(quantity) || ''}
+                </div>`);
+            searched.appendChild(element);
+            itemDomList.push(element);
         });
 
         searchTab.querySelector('#refresh').addEventListener('click', async event => {
             event.preventDefault();
 
             const newItems = await inventory();
-            const containers = [searchResults, selected];
-            items.filter(({name}) => newItems.get(name) !== userItems.get(name)).forEach((item) => {
+            const containers = [searched, selected];
+            items.filter(({name}) => newItems.get(name) !== userItems.get(name)).forEach(item => {
                 const {id, name} = item;
-                containers
-                    .map(elem => elem.querySelector(`#item-${id}`))
-                    .filter(a => a)
-                    .forEach(elem => {
-                        const quantity = newItems.get(name) || 0;
-                        const badge = elem.querySelector('span.badge');
+                containers.map(elem => elem.querySelector(`#item-${id}`)).filter(a => a).forEach(elem => {
+                    const quantity = newItems.get(name) || 0;
+                    const badge = elem.querySelector('span.badge');
 
-                        if (badge && quantity) {
-                            badge.innerHTML = quantity;
-                        } else if (badge) {
-                            elem.removeChild(badge);
-                        } else if (quantity) {
-                            elem.appendChild(asElement(createBadge(quantity)));
-                        }
-                        item.count = quantity;
-                    });
+                    if (badge && quantity) {
+                        badge.innerHTML = quantity;
+                    } else if (badge) {
+                        elem.removeChild(badge);
+                    } else if (quantity) {
+                        elem.appendChild(asElement(createBadge(quantity)));
+                    }
+                    item.count = quantity;
+                });
             });
         });
 
@@ -97,13 +94,14 @@ export function init(parent) {
             if (event.keyCode !== 13) return;
             event.preventDefault();
 
-            const searchQuery = parseQuery(event.target.value.trim());
+            const query = parseQuery(event.target.value.trim());
 
-            searchResults.querySelectorAll('.item').forEach(a => a.classList.add('hide'));
-            const selectedIds = Array.prototype.map.call(selected.querySelectorAll('.item'), a => a.dataset.id);
-
-            items.filter(a => searchQuery(a) && !selectedIds.includes(a.id))
-                .forEach(({id}) => searchResults.querySelector(`#item-${id}`).classList.remove('hide'));
+            const itemMap = toMap(items, a => a.id);
+            const selectedSet = new Set(Array.prototype.map.call(selected.querySelectorAll('.item'), a => a.dataset.id));
+            itemDomList.forEach(({classList, dataset: {id}}) => {
+                classList.remove('hide');
+                if (selectedSet.has(id) || !query(itemMap.get(id))) classList.add('hide');
+            });
         });
     });
 }

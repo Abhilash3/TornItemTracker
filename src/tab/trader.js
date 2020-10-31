@@ -136,10 +136,10 @@ export function trade(items) {
     items.filter(({id}) => !tbody.querySelector(`tr[data-id='${id}']`)).forEach(item => tbody.appendChild(createTradeRow(item)));
 
     const prices = Promise.all(items.map(({id, name}) => priceDetails(id).then(prices => [name, prices]))).then(prices => new Map(prices));
-    Promise.all([prices, inventory()]).then(([prices, userItems]) => {
+    Promise.all([prices, inventory()]).then(([prices, inventory]) => {
         Array.prototype.forEach.call(tbody.querySelectorAll('tr'), tr => {
             const name = tr.querySelector('td.name > label').innerHTML;
-            const quantity = userItems.get(name) || 0;
+            const quantity = inventory.get(name) || 0;
 
             tr.querySelector('td.price').innerHTML = asHtml(prices.get(name) || []);
             tr.querySelector('td.inventory > label').innerHTML = quantity;

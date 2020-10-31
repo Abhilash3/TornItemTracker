@@ -16,7 +16,7 @@ function cacheWrapped(service, resetTime = DEFAULT_RESET_TIME) {
         }
 
         return cache.get(key);
-    }
+    };
 }
 
 function itemPrices(itemId) {
