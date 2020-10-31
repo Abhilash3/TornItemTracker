@@ -9,6 +9,24 @@ const history = new Map();
 const items = new Map();
 const interest = new Set();
 
+function requestPermission(id, name) {
+   Notification.requestPermission(permission => {
+      if (permission === 'granted') notify(id, name);
+   });
+}
+
+function notify(id, name) {
+    if (Notification.permission === 'default') requestPermission(id, name);
+    if (Notification.permission === 'granted') {
+        const notification = new Notification(
+            `Item ${name} is cheap.`, {tag: 'torn', body: 'Click here to open market'});
+        notification.onclick = () => {
+            window.open(`https://www.torn.com/imarket.php#/p=shop&step=shop&type=${id}`);
+            notification.close();
+        };
+    }
+}
+
 let request;
 let chart;
 
@@ -49,8 +67,7 @@ function trackPrices() {
             const isValid = values.some(a => a);
             if (!isValid) history.delete(name);
 
-            if (value && (1 - value / max(values)) >= 0.8) interest.add(name);
-            else interest.delete(name);
+            if (value && (value / max(values)) <= 0.8) notify(items.get(name), name);
 
             return isValid;
         });
@@ -60,21 +77,6 @@ function trackPrices() {
 export function init(parent) {
     const trackerTab = parent.querySelector('#tracker');
     trackerTab.appendChild(asElement(trackerTemplate));
-
-    const notice = trackerTab.querySelector('#notice');
-    notice.addEventListener('click', event => {
-        if (!event.target.classList.contains('item')) return;
-
-        event.preventDefault();
-        window.open(`https://www.torn.com/imarket.php#/p=shop&step=shop&type=${event.target.dataset.id}`);
-    });
-    setInterval(() => {
-        notice.innerHTML = '';
-        Array.from(interest).forEach(name => {
-            const id = items.get(name);
-            notice.appendChild(asElement(`<div class='item bg-light rounded d-lg-inline-flex p-2' id='notice-${id}' data-id='${id}'>${name}</div>`));
-        });
-    }, 5 * 1000);
 
     chart = new Chart(trackerTab.querySelector('canvas.chart').getContext('2d'), {
         data: {
