@@ -15,7 +15,9 @@ function requestPermission(id, name) {
    });
 }
 
+let disabled = false;
 function notify(id, name, price) {
+    if (disabled) return;
     if (Notification.permission === 'default') requestPermission(id, name, price);
     if (Notification.permission === 'granted') {
         const notification = new Notification(
@@ -77,6 +79,8 @@ function trackPrices() {
 export function init(parent) {
     const trackerTab = parent.querySelector('#tracker');
     trackerTab.appendChild(asElement(trackerTemplate));
+
+    document.querySelector('#notify').addEventListener('change', () => disabled = !disabled);
 
     const xColor = randomColor(), yColor = randomColor();
     const updateAxisColor = (key, color) => {
