@@ -1,6 +1,7 @@
-import { fire, toMap } from './util';
+import {fire, toMap} from './util';
 
-const API_KEY = 'Your Api Key';
+import {API_KEY} from '../application.properties';
+
 const DEFAULT_RESET_TIME = 10 * 1000;
 
 const clone = (item, props = {}) => ({...item, ...props});
