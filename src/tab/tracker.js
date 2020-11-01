@@ -11,15 +11,15 @@ const interest = new Set();
 
 function requestPermission(id, name) {
    Notification.requestPermission(permission => {
-      if (permission === 'granted') notify(id, name);
+      if (permission === 'granted') notify(id, name, price);
    });
 }
 
-function notify(id, name) {
-    if (Notification.permission === 'default') requestPermission(id, name);
+function notify(id, name, price) {
+    if (Notification.permission === 'default') requestPermission(id, name, price);
     if (Notification.permission === 'granted') {
         const notification = new Notification(
-            `Item ${name} is cheap.`, {tag: 'torn', body: 'Click here to open market'});
+            `Item ${name} is at ${price}.`, {body: 'Click here to open market'});
         notification.onclick = () => {
             window.open(`https://www.torn.com/imarket.php#/p=shop&step=shop&type=${id}`);
             notification.close();
@@ -55,7 +55,7 @@ function trackPrices() {
     request = setTimeout(trackPrices, 15 * 1000);
     if (!chart) return;
 
-    const max = (values) => values.reduce((a, b) => Math.max(a, b), -1);
+    const max = values => values.reduce((a, b) => Math.max(a, b), -1);
     const priceWithDelay = (id, i) => new Promise(res => setTimeout(() => res(priceDetails(id)), i * 1000));
     Promise.all(Array.from(items).map(([name, id], i) => priceWithDelay(id, i).then(prices => [name, prices[0][0]]))).then(prices => {
         const priceMap = new Map(prices);
@@ -67,7 +67,7 @@ function trackPrices() {
             const isValid = values.some(a => a);
             if (!isValid) history.delete(name);
 
-            if (value && (value / max(values)) <= 0.8) notify(items.get(name), name);
+            if ((value || value === 0) && value <= 0.97 * max(values)) notify(items.get(name), name, asDoller(value));
 
             return isValid;
         });
@@ -78,14 +78,24 @@ export function init(parent) {
     const trackerTab = parent.querySelector('#tracker');
     trackerTab.appendChild(asElement(trackerTemplate));
 
+    const xColor = randomColor(), yColor = randomColor();
+    const updateAxisColor = (key, color) => {
+        const {gridLines, ticks} = chart.options.scales[key + 'Axes'][0];
+        gridLines.zeroLineColor = color;
+        ticks.fontColor = color;
+        chart.update();
+    };
+    trackerTab.querySelector('#xColor').addEventListener('click', () => updateAxisColor('x', randomColor()));
+    trackerTab.querySelector('#yColor').addEventListener('click', () => updateAxisColor('y', randomColor()));
+
     chart = new Chart(trackerTab.querySelector('canvas.chart').getContext('2d'), {
         data: {
             datasets: [],
             labels: new Array(MAX_HISTORY).fill(0).map((a, b) => MAX_HISTORY - b),
         },
         options: {
-            animation: { duration: 0 },
-            elements: { line: { tension: 0 } },
+            animation: {duration: 0},
+            elements: {line: {tension: 0}},
             legend: {
                 onClick: (e, {text}) => {
                     const log = history.get(text);
@@ -100,20 +110,24 @@ export function init(parent) {
                     gridLines: {
                         display: false,
                         drawTicks: false,
-                        zeroLineColor: randomColor(),
+                        zeroLineColor: xColor,
                     },
                     ticks: {
-                        fontColor: randomColor(),
+                        fontColor: xColor,
                         fontStyle: 'bold',
                         padding: 4,
                     },
                 }],
                 yAxes: [{
-                    gridLines: { display: false, drawTicks: false },
+                    gridLines: {
+                        display: false,
+                        drawTicks: false,
+                        zeroLineColor: yColor,
+                    },
                     ticks: {
                         beginAtZero: false,
                         callback: asDoller,
-                        fontColor: randomColor(),
+                        fontColor: yColor,
                         fontStyle: 'bold',
                         padding: 4,
                     },
