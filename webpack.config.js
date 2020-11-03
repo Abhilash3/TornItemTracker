@@ -1,12 +1,14 @@
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+
 module.exports = {
-    entry: {index: './app.js'},
+    entry: {index: './public/js/index.js'},
     devtool: 'source-map',
     cache: true,
+    optimization: {minimizer: [new UglifyJsPlugin()]},
     output: {
         path: __dirname,
-        filename: './build/[name].js'
+        filename: './public/build/[name].js'
     },
-    node: {fs: 'empty'},
     module: {
         rules: [{
             test: /\.js$/,
@@ -20,12 +22,6 @@ module.exports = {
             test: /\.css$/,
             exclude: /(node_modules)/,
             use: ['style-loader', 'css-loader'],
-        }, {
-            test: /\.properties$/,
-            exclude: /(node_modules)/,
-            loader: 'json5-loader',
-            options: {esModule: false},
-            type: 'javascript/auto',
         }]
-    }
+    },
 };

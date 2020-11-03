@@ -1,13 +1,12 @@
-import { priceDetails } from '../api';
-import { asDoller, asElement, randomColor, toMap } from '../util';
+import {asDoller, asElement, randomColor, toMap} from './util';
 import Chart from 'chart.js';
 
-import trackerTemplate from '../../template/tracker.html';
+import trackerTemplate from '../template/tracker.html';
 
 const MAX_HISTORY = 1000;
 const history = new Map();
 const items = new Map();
-const interest = new Set();
+const prices = (id, max = 5) => fetch(`/prices/${id}/${max}`).then(a => a.json());
 
 function requestPermission(id, name) {
    Notification.requestPermission(permission => {
@@ -58,7 +57,7 @@ function trackPrices() {
     if (!chart) return;
 
     const max = values => values.reduce((a, b) => Math.max(a, b), -1);
-    const priceWithDelay = (id, i) => new Promise(res => setTimeout(() => res(priceDetails(id)), i * 1000));
+    const priceWithDelay = (id, i) => new Promise(res => setTimeout(() => res(prices(id)), i * 1000));
     Promise.all(Array.from(items).map(([name, id], i) => priceWithDelay(id, i).then(prices => [name, prices[0][0]]))).then(prices => {
         const priceMap = new Map(prices);
         updateDatasets((name, {values}) => {

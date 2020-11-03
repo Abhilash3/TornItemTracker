@@ -1,8 +1,7 @@
-import { parseQuery } from '../query';
-import { allItems, inventory } from '../api';
-import { asElement, fromClipboard, toClipboard, toMap } from '../util';
+import {parseQuery} from './query';
+import {asElement, fromClipboard, toClipboard, toMap} from './util';
 
-import searchTemplate from '../../template/search.html';
+import searchTemplate from '../template/search.html';
 
 function findTarget({target}) {
     if (target.nodeName.toLowerCase() === 'span') target = target.parentNode;
@@ -10,7 +9,8 @@ function findTarget({target}) {
     return target;
 }
 
-const items = allItems();
+const items = fetch('/items').then(a => a.json());
+const inventory = () => fetch('/inventory').then(a => a.json()).then(a => toMap(a, a => a.name, a => a.quantity));
 
 export function init(parent) {
     const searchTab = parent.querySelector('#search');

@@ -1,15 +1,17 @@
-import { inventory, priceDetails } from '../api';
-import { asDoller, asElement, toClipboard, toMap } from '../util';
+import {asDoller, asElement, toClipboard, toMap} from './util';
 
-import counterTemplate from '../../template/counter.html';
-import tradeRowTemplate from '../../template/tradeRow.html';
-import traderTemplate from '../../template/trader.html';
+import counterTemplate from '../template/counter.html';
+import tradeRowTemplate from '../template/tradeRow.html';
+import traderTemplate from '../template/trader.html';
 
 (() => {
     if (!Element.prototype.matches) {
         Element.prototype.matches = Element.prototype.msMatchesSelector;
     }
 })();
+
+const inventory = () => fetch('/inventory').then(a => a.json()).then(a => toMap(a, a => a.name, a => a.quantity));
+const prices = (id, max = 5) => fetch(`/prices/${id}/${max}`).then(a => a.json());
 
 function closest(element, selector) {
     while (element !== null && !element.matches(selector)) {
@@ -135,7 +137,7 @@ export function trade(items) {
 
     items.filter(({id}) => !tbody.querySelector(`tr[data-id='${id}']`)).forEach(item => tbody.appendChild(createTradeRow(item)));
 
-    const prices = Promise.all(items.map(({id, name}) => priceDetails(id).then(prices => [name, prices]))).then(prices => new Map(prices));
+    const prices = Promise.all(items.map(({id, name}) => prices(id).then(prices => [name, prices]))).then(prices => new Map(prices));
     Promise.all([prices, inventory()]).then(([prices, inventory]) => {
         Array.prototype.forEach.call(tbody.querySelectorAll('tr'), tr => {
             const name = tr.querySelector('td.name > label').innerHTML;

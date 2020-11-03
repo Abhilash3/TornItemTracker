@@ -4,16 +4,24 @@
   "description": "",
   "scripts": {
     "dev": "webpack-dev-server --open",
-    "build": "webpack && npm run start",
-    "start": "http-server -a localhost -p 8080"
+    "build": "webpack && npm run-script run",
+    "run": "node app.js"
+  },
+  "engines": {
+    "node": "10.x"
   },
   "author": "avedwan",
   "license": "ISC",
   "dependencies": {
     "@babel/polyfill": "^7.10.4",
+    "body-parser": "^1.19.0",
     "chart.js": "^2.9.3",
+    "cookie-parser": "^1.4.5",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
     "html-loader": "^0.5.5",
-    "http-server": "^0.12.3"
+    "http-server": "^0.12.3",
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.4",
@@ -23,6 +31,7 @@
     "css-loader": "^3.6.0",
     "json5-loader": "^4.0.1",
     "style-loader": "^1.2.1",
+    "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0"

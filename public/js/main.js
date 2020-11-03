@@ -1,7 +1,7 @@
-import * as search from './tab/search';
-import * as tracker from './tab/tracker';
-import * as trader from './tab/trader';
-import { asElement } from './util';
+import * as search from './search.js';
+import * as tracker from './tracker.js';
+import * as trader from './trader.js';
+import {asElement} from './util.js';
 
 import mainTemplate from '../template/main.html';
 
