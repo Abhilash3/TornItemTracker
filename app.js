@@ -14,7 +14,7 @@ app.use(session({
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/public/build'));
 
 const send = (res, name) => res.sendFile(`${__dirname}/public/html/${name}.html`);
 app.get('/', (req, res) => {
