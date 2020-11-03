@@ -6,7 +6,7 @@ import trackerTemplate from '../template/tracker.html';
 const MAX_HISTORY = 1000;
 const history = new Map();
 const items = new Map();
-const prices = (id, max = 5) => fetch(`/prices/${id}/${max}`).then(a => a.json());
+const prices = (id, max = 5) => fetch(`/prices/${max}/${id}`).then(a => a.json());
 
 function requestPermission(id, name) {
    Notification.requestPermission(permission => {

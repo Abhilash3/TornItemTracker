@@ -19,7 +19,7 @@ app.use(express.static(__dirname + '/public/build'));
 const send = (res, name) => res.sendFile(`${__dirname}/public/html/${name}.html`);
 app.get('/', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    return res.resirect('/app');
+    return res.redirect('/app');
 });
 app.get('/login', (req, res) => {
 	if (req.session.user) return res.redirect('/app');
@@ -47,7 +47,7 @@ app.get('/inventory', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     api.inventory(req.session.user).then(a => res.json(a));
 });
-app.get('/prices/:itemId/:max', (req, res) => {
+app.get('/prices/:max/:itemId', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const {itemId, max} = req.params;
     api.prices(req.session.user, itemId, max).then(a => res.json(a));
