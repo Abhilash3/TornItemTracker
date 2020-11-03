@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "dev": "webpack-dev-server --open",
-    "build": "webpack && npm run-script run",
+    "build": "webpack",
     "run": "node app.js"
   },
   "engines": {
