@@ -22,7 +22,7 @@ function closest(element, selector) {
 
 const asHtml = (() => {
     const templated = (price, count) => `<div class='m-auto p-1'><div>${asDoller(price)}</div><div>${count}</div></div>`;
-    return (prices) => prices.map(([a, b]) => templated(Number(a), b)).reduce((a, b) => a + b, '');
+    return prices => prices.map(([a, b]) => templated(Number(a), b)).reduce((a, b) => a + b, '');
 })();
 
 function createCounter(min = 0, max = 0, value = max) {
@@ -137,8 +137,8 @@ export function trade(items) {
 
     items.filter(({id}) => !tbody.querySelector(`tr[data-id='${id}']`)).forEach(item => tbody.appendChild(createTradeRow(item)));
 
-    const prices = Promise.all(items.map(({id, name}) => prices(id).then(prices => [name, prices]))).then(prices => new Map(prices));
-    Promise.all([prices, inventory()]).then(([prices, inventory]) => {
+    const pricesRequest = Promise.all(items.map(({id, name}) => prices(id).then(prices => [name, prices]))).then(prices => new Map(prices));
+    Promise.all([pricesRequest, inventory()]).then(([prices, inventory]) => {
         Array.prototype.forEach.call(tbody.querySelectorAll('tr'), tr => {
             const name = tr.querySelector('td.name > label').innerHTML;
             const quantity = inventory.get(name) || 0;
