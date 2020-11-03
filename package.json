@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "webpack-dev-server --open",
     "build": "webpack",
-    "run": "node app.js"
+    "start": "node app.js"
   },
   "engines": {
     "node": "10.x"

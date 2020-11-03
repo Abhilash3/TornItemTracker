@@ -53,4 +53,5 @@ app.get('/prices/:itemId/:max', (req, res) => {
     api.prices(req.session.user, itemId, max).then(a => res.json(a));
 });
 
-app.listen(3000, () => console.log('Express server listening on port 3000'));
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log('Express server listening on port ' + port));
