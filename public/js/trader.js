@@ -11,7 +11,7 @@ import traderTemplate from '../template/trader.html';
 })();
 
 const inventory = () => fetch('/inventory').then(a => a.json()).then(a => toMap(a, a => a.name, a => a.quantity));
-const prices = (id, max = 5) => fetch(`/prices/${id}/${max}`).then(a => a.json());
+const prices = (id, max = 5) => fetch(`/prices/${max}/${id}`).then(a => a.json());
 
 function closest(element, selector) {
     while (element !== null && !element.matches(selector)) {
