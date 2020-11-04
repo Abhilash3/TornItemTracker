@@ -33,6 +33,8 @@ function itemPrices(key, itemId) {
     });
 }
 
+module.exports.basic = key => query(key, 'user', '', 'basic');
+
 module.exports.items = key => query(key, 'torn', '', 'items')
     .then(response => response.items || []).catch(err => ({}))
     .then(items => Object.keys(items).map(id => clone(items[id], {id})));

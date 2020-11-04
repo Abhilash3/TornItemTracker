@@ -22,12 +22,14 @@ app.get('/', (req, res) => {
     return res.redirect('/app');
 });
 app.get('/login', (req, res) => {
-	if (req.session.user) return res.redirect('/app');
-	send(res, 'login');
+    if (req.session.user) return res.redirect('/app');
+    send(res, 'login');
 }).post('/login', (req, res) => {
     const key = req.body.apiKey;
-    api.items(key).then(a => {
-        req.session.user = key;
+    api.basic(key).then(a => {
+        if (a.error) return res.status(424).json(a.error);
+        req.session.user = a;
+        req.session.key = key;
         res.redirect('/app');
     });
 });
@@ -41,16 +43,16 @@ app.get('/app', (req, res) => {
 });
 app.get('/items', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    api.items(req.session.user).then(a => res.json(a));
+    api.items(req.session.key).then(a => res.json(a));
 });
 app.get('/inventory', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    api.inventory(req.session.user).then(a => res.json(a));
+    api.inventory(req.session.key).then(a => res.json(a));
 });
 app.get('/prices/:max/:itemId', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const {itemId, max} = req.params;
-    api.prices(req.session.user, itemId, max).then(a => res.json(a));
+    api.prices(req.session.key, itemId, max).then(a => res.json(a));
 });
 
 const port = process.env.PORT || 3000;
