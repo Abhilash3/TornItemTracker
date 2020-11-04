@@ -1,0 +1,23 @@
+body {
+  margin-top: 5%;
+  margin-bottom: 5%;
+  background: #282726;
+}
+
+#login-form {
+  padding: 3% 9%;
+  background: #fff;
+  box-shadow: 0 5px 8px 0 rgba(255, 255, 255, 0.2), 0 9px 26px 0 rgba(255, 255, 255, 0.19);
+}
+
+h3 {
+  text-align: center;
+  margin-bottom: 12%;
+}
+
+input[type='submit'] {
+  font-weight: 600;
+  color: #282726;
+  border: none;
+  border-radius: 1.5rem;
+}

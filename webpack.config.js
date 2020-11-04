@@ -1,7 +1,7 @@
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
-    entry: {index: './public/js/index.js'},
+    entry: {index: './client/js/index.js'},
     devtool: 'source-map',
     cache: true,
     optimization: {minimizer: [new UglifyJsPlugin()]},
