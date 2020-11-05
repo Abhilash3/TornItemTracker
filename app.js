@@ -6,8 +6,8 @@ const cookieParser = require('cookie-parser');
 const express = require('express');
 const mongoose = require('mongoose');
 const passport = require('passport');
-const passportCustom = require('passport-custom');
 const session = require('express-session');
+const {Strategy} = require('passport-custom');
 const {ensureLoggedIn} = require('connect-ensure-login');
 
 const User = require('./modal/user.modal');
@@ -29,25 +29,19 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/public'));
 
-passport.use('torn', new passportCustom.Strategy((req, done) => {
+passport.use('torn', new Strategy((req, done) => {
     const {apiKey} = req.body;
     api.basic(apiKey).then(({error, player_id: userId, name: username}) => {
         if (error) return done(error);
         User.findOne({userId}, (err, user) => {
-            if (err) done(err, user);
+            if (err || user) return done(err, user);
 
-            let promise = null;
-            if (user) promise = Promise.resolve(user);
-            else {
-                promise = new Promise((res, rej) => {
-                    User.create({username, userId}, (err, doc) => {
-                        if (err) rej(err);
-                        res(doc);
-                    })
-                });
-            }
-
-            promise.then((user) => done(err, user)).catch(err => done(err, user));
+            new Promise((res, rej) => {
+                User.create({username, userId}, (err, doc) => {
+                    if (err) rej(err);
+                    res(doc);
+                })
+            }).then((user) => done(err, user)).catch(err => done(err, user));
         });
     });
 }));
@@ -70,9 +64,8 @@ app.get('/login', (req, res) => {
         if (!user) return res.redirect('/login');
         req.logIn(user, err => {
             if (err) return sendError(res, err);
-            const {apiKey} = req.body;
             req.session.user = user;
-            req.session.key = apiKey;
+            req.session.key = req.body.apiKey;
             res.redirect('/app');
         });
     })(req, res, next);
