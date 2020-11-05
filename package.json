@@ -15,7 +15,6 @@
   "dependencies": {
     "@babel/polyfill": "^7.10.4",
     "body-parser": "^1.19.0",
-    "chart.js": "^2.9.3",
     "connect-ensure-login": "^0.1.1",
     "connect-mongo": "^3.2.0",
     "cookie-parser": "^1.4.5",
@@ -27,14 +26,14 @@
     "mongoose": "^5.10.11",
     "node-fetch": "^2.6.1",
     "passport": "^0.4.1",
-    "passport-local": "^1.0.0",
-    "passport-local-mongoose": "^6.0.1"
+    "passport-custom": "^1.1.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.4",
     "@babel/core": "^7.10.4",
     "@babel/preset-env": "^7.10.4",
     "babel-loader": "^8.1.0",
+    "chart.js": "^2.9.4",
     "css-loader": "^3.6.0",
     "json5-loader": "^4.0.1",
     "style-loader": "^1.2.1",

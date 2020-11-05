@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const localMongoose = require('passport-local-mongoose');
 
 const {DB_USER, DB_HOST, DB_PASSWORD, DB_NAME} = process.env;
 mongoose.connect(`mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/${DB_NAME}?retryWrites=true&w=majority`, {
@@ -19,11 +18,14 @@ process.on('SIGINT', () => mongoose.connection.close(() => {
 const User = new mongoose.Schema({
     username: {
         type: 'string',
+        required: true,
+    },
+    userId: {
+        type: 'string',
         unique: true,
         required: true,
         index: true,
     },
 });
 
-User.plugin(localMongoose);
 module.exports = mongoose.model('user', User);

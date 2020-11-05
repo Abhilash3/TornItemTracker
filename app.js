@@ -3,11 +3,12 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const connectMongo = require('connect-mongo');
 const cookieParser = require('cookie-parser');
-const ensureLogin = require('connect-ensure-login');
 const express = require('express');
 const mongoose = require('mongoose');
 const passport = require('passport');
+const passportCustom = require('passport-custom');
 const session = require('express-session');
+const {ensureLoggedIn} = require('connect-ensure-login');
 
 const User = require('./modal/user.modal');
 const api = require('./js/api');
@@ -28,51 +29,66 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/public'));
 
-passport.use(User.createStrategy());
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+passport.use('torn', new passportCustom.Strategy((req, done) => {
+    const {apiKey} = req.body;
+    api.basic(apiKey).then(({error, player_id: userId, name: username}) => {
+        if (error) return done(error);
+        User.findOne({userId}, (err, user) => {
+            if (err) done(err, user);
 
-const send = (res, name) => res.sendFile(`${__dirname}/client/html/${name}.html`);
+            let promise = null;
+            if (user) promise = Promise.resolve(user);
+            else {
+                promise = new Promise((res, rej) => {
+                    User.create({username, userId}, (err, doc) => {
+                        if (err) rej(err);
+                        res(doc);
+                    })
+                });
+            }
+
+            promise.then((user) => done(err, user)).catch(err => done(err, user));
+        });
+    });
+}));
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
+
+const sendView = (res, name) => res.sendFile(`${__dirname}/client/html/${name}.html`);
+const sendError = (res, err) => res.status(400).json({error: err});
+
 app.get('/', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     return res.redirect('/app');
 });
-app.get('/register', (req, res) => send(res, 'register')).post('/register', (req, res) => {
-    const {username, password} = req.body;
-    User.register({username}, password, (err, user) => {
-        if (err) return res.status(400).json({error: err});
-        res.redirect('/login');
-    });
-});
 app.get('/login', (req, res) => {
     if (req.session.user) return res.redirect('/app');
-    send(res, 'login');
+    sendView(res, 'login');
 }).post('/login', (req, res, next) => {
-    passport.authenticate('local', (err, user) => {
-        if (err) return res.status(400).json({error: err});
+    passport.authenticate('torn', (err, user) => {
+        if (err) return sendError(res, err);
         if (!user) return res.redirect('/login');
         req.logIn(user, err => {
-            if (err) return res.status(400).json({error: err});
+            if (err) return sendError(res, err);
             const {apiKey} = req.body;
-            api.basic(apiKey).then(a => {
-                if (a.error) return res.status(424).json(a.error);
-                req.session.user = a;
-                req.session.key = apiKey;
-                res.redirect('/app');
-            });
+            req.session.user = user;
+            req.session.key = apiKey;
+            res.redirect('/app');
         });
     })(req, res, next);
 });
 app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/login');
+    req.session.destroy(() => {
+        req.session = null;
+        res.redirect('/login');
+    });
 });
 
-app.get('/app', ensureLogin.ensureLoggedIn(), (req, res) => send(res, 'index'));
-app.get('/items', ensureLogin.ensureLoggedIn(), (req, res) => api.items(req.session.key).then(a => res.json(a)));
-app.get('/inventory', ensureLogin.ensureLoggedIn(), (req, res) => api.inventory(req.session.key).then(a => res.json(a)));
-app.get('/prices/:max/:itemId', ensureLogin.ensureLoggedIn(), (req, res) => api.prices(req.session.key, req.params.itemId, req.params.max).then(a => res.json(a)));
-app.get('/account', ensureLogin.ensureLoggedIn(), (req, res) => res.json(req.session.user));
+app.get('/app', ensureLoggedIn(), (req, res) => sendView(res, 'index'));
+app.get('/items', ensureLoggedIn(), (req, res) => api.items(req.session.key).then(a => res.json(a)));
+app.get('/inventory', ensureLoggedIn(), (req, res) => api.inventory(req.session.key).then(a => res.json(a)));
+app.get('/prices/:max/:item', ensureLoggedIn(), (req, res) => api.prices(req.session.key, req.params.item, req.params.max).then(a => res.json(a)));
+app.get('/account', ensureLoggedIn(), (req, res) => res.json(req.session.user));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log('Express server listening on port ' + port));
