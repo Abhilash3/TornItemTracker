@@ -1,3 +1,4 @@
+import * as account from './account.js';
 import * as search from './search.js';
 import * as tracker from './tracker.js';
 import * as trader from './trader.js';
@@ -44,7 +45,7 @@ export function init(parent) {
     main.querySelector('#track-tab').addEventListener('click', async () => tracker.track(await search.selected()));
     main.querySelector('#trade-tab').addEventListener('click', async () => trader.trade(await search.selected()));
 
-    [search, tracker, trader].forEach(a => a.init(main));
+    [search, tracker, trader, account].forEach(a => a.init(main));
 
     main.querySelector('ul.navbar-nav li.nav-item.active a.nav-link').click();
     dark.click();

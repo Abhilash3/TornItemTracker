@@ -1,3 +1,4 @@
+import {inventory, prices} from './api';
 import {asDoller, asElement, toClipboard, toMap} from './util';
 
 import counterTemplate from '../template/counter.html';
@@ -9,9 +10,6 @@ import traderTemplate from '../template/trader.html';
         Element.prototype.matches = Element.prototype.msMatchesSelector;
     }
 })();
-
-const inventory = () => fetch('/inventory').then(a => a.json()).then(a => toMap(a, a => a.name, a => a.quantity));
-const prices = (id, max = 5) => fetch(`/prices/${max}/${id}`).then(a => a.json());
 
 function closest(element, selector) {
     while (element !== null && !element.matches(selector)) {
@@ -39,7 +37,7 @@ function createTradeRow({id, name}) {
     element.setAttribute('data-id', id);
     element.querySelector('td.name > label').innerHTML = name;
     element.querySelector('td.value > label').innerHTML = 0;
-    
+
     return element;
 }
 
@@ -74,7 +72,7 @@ export function init(parent) {
 
         const plusMinus = closest(target, 'div.plus-minus');
 
-        const { min, max } = plusMinus.dataset;
+        const {min, max} = plusMinus.dataset;
         const input = plusMinus.querySelector('input');
         const value = Number(input.value);
         const type = target.dataset.type;

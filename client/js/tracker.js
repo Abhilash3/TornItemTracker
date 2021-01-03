@@ -1,4 +1,5 @@
-import {asDoller, asElement, randomColor, toMap} from './util';
+import {account, prices, update} from './api';
+import {asDoller, asElement, randomColor} from './util';
 import Chart from 'chart.js';
 
 import trackerTemplate from '../template/tracker.html';
@@ -6,7 +7,6 @@ import trackerTemplate from '../template/tracker.html';
 const MAX_HISTORY = 1000;
 const history = new Map();
 const items = new Map();
-const prices = (id, max = 5) => fetch(`/prices/${max}/${id}`).then(a => a.json());
 
 function requestPermission(id, name) {
    Notification.requestPermission(permission => {
@@ -14,15 +14,16 @@ function requestPermission(id, name) {
    });
 }
 
-let disabled = false;
+let constraints = [];
+let disabled = true;
 function notify(id, name, price) {
     if (disabled) return;
     if (Notification.permission === 'default') requestPermission(id, name, price);
     if (Notification.permission === 'granted') {
         const notification = new Notification(
-            `Item ${name} is at ${price}.`, {body: 'Click here to open market'});
+            `${name} at ${price}.`, {body: 'Click here to open market'});
         notification.onclick = () => {
-            window.open(`https://www.torn.com/imarket.php#/p=shop&step=shop&type=${id}`);
+            window.open('https://www.torn.com/imarket.php#/p=shop&step=shop&type=' + id);
             notification.close();
         };
     }
@@ -35,19 +36,10 @@ function updateDatasets(process = () => true) {
     chart.data.datasets = Array.from(history)
         .filter(([name, log]) => process(name, log))
         .map(([name, {color, values}]) => ({
-            borderColor: color,
-            borderWidth: 2,
-            data: values,
-            fill: false,
-            label: name,
-            pointBackgroundColor: color,
-            pointBorderColor: color,
-            pointBorderWidth: 5,
-            pointHoverBackgroundColor: color,
-            pointHoverBorderColor: color,
-            pointHoverBorderWidth: 1,
-            pointHoverRadius: 5,
-            pointRadius: 0,
+            borderColor: color, borderWidth: 2, data: values, fill: false,label: name,
+            pointBackgroundColor: color, pointBorderColor: color, pointBorderWidth: 5,
+            pointHoverBackgroundColor: color, pointHoverBorderColor: color,
+            pointHoverBorderWidth: 1, pointHoverRadius: 5, pointRadius: 0,
         }));
     chart.update();
 }
@@ -68,7 +60,9 @@ function trackPrices() {
             const isValid = values.some(a => a);
             if (!isValid) history.delete(name);
 
-            if ((value || value === 0) && value <= 0.97 * max(values)) notify(items.get(name), name, asDoller(value));
+            if ((value || value === 0) && constraints.some(({check}) => check(items.get(name), value / max(values)))) {
+                notify(items.get(name), name, asDoller(value));
+            }
 
             return isValid;
         });
@@ -79,9 +73,20 @@ export function init(parent) {
     const trackerTab = parent.querySelector('#tracker');
     trackerTab.appendChild(asElement(trackerTemplate));
 
-    document.querySelector('#notify').addEventListener('change', () => disabled = !disabled);
+    account().then(({notify, trackers = [{value: 0.05}]}) => {
+        disabled = !notify;
+        const checkbox = document.querySelector('#notify');
+        checkbox.checked = !!notify;
+        checkbox.addEventListener('change', () => update({notify: disabled}).then(() => disabled = !disabled));
 
-    const xColor = randomColor(), yColor = randomColor();
+        constraints = trackers.map((item) => {
+            const {id, value} = item;
+            const copy = Object.create(item);
+            copy.check = (item, rate) => (id && item === id || true) && rate >= value;
+            return copy;
+        });
+    });
+
     const updateAxisColor = (key, color) => {
         const {gridLines, ticks} = chart.options.scales[key + 'Axes'][0];
         gridLines.zeroLineColor = color;
@@ -91,6 +96,7 @@ export function init(parent) {
     trackerTab.querySelector('#xColor').addEventListener('click', () => updateAxisColor('x', randomColor()));
     trackerTab.querySelector('#yColor').addEventListener('click', () => updateAxisColor('y', randomColor()));
 
+    const xColor = randomColor(), yColor = randomColor();
     chart = new Chart(trackerTab.querySelector('canvas.chart').getContext('2d'), {
         data: {
             datasets: [],
@@ -102,38 +108,22 @@ export function init(parent) {
             legend: {
                 onClick: (e, {text}) => {
                     const log = history.get(text);
-                    if (log) log.color = randomColor();
-                    updateDatasets();
+                    if (log) {
+                      log.color = randomColor();
+                      updateDatasets();
+                    }
                 },
                 position: 'top',
             },
             responsive: false,
             scales: {
                 xAxes: [{
-                    gridLines: {
-                        display: false,
-                        drawTicks: false,
-                        zeroLineColor: xColor,
-                    },
-                    ticks: {
-                        fontColor: xColor,
-                        fontStyle: 'bold',
-                        padding: 4,
-                    },
+                    gridLines: {display: false, drawTicks: false, zeroLineColor: xColor},
+                    ticks: {fontColor: xColor, fontStyle: 'bold', padding: 4},
                 }],
                 yAxes: [{
-                    gridLines: {
-                        display: false,
-                        drawTicks: false,
-                        zeroLineColor: yColor,
-                    },
-                    ticks: {
-                        beginAtZero: false,
-                        callback: asDoller,
-                        fontColor: yColor,
-                        fontStyle: 'bold',
-                        padding: 4,
-                    },
+                    gridLines: {display: false, drawTicks: false, zeroLineColor: yColor},
+                    ticks: {beginAtZero: false, callback: asDoller, fontColor: yColor, fontStyle: 'bold', padding: 4},
                 }],
             },
             tooltips: {
@@ -151,8 +141,20 @@ export function track(toTrack) {
     items.clear();
     toTrack.forEach(({id, name}, i) => {
         items.set(name, id);
+        items.set(id, name);
         history.set(name, history.get(name) || {values: new Array(MAX_HISTORY), color: randomColor()});
     });
+
+    const details = document.querySelector('#constraints');
+    details.innerHTML = '';
+    constraints.forEach(({id, value}) => details.appendChild(asElement(`
+        <div id='${id ? ('item-' + id) : 'default'}' class='input-group'>
+            <div class='form-control'>${id ? items.get(id) : 'All'}</div>
+            <div class='input-group-append'>
+                <span class='form-control'>${value * 100}%</span>
+            </div>
+        </div>`)));
+
 
     if (!request) trackPrices();
 }

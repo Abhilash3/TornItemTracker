@@ -29,19 +29,12 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/public'));
 
-passport.use('torn', new Strategy((req, done) => {
-    const {apiKey} = req.body;
+passport.use('torn', new Strategy(({body: {apiKey}}, done) => {
     api.basic(apiKey).then(({error, player_id: userId, name: username}) => {
         if (error) return done(error);
         User.findOne({userId}, (err, user) => {
             if (err || user) return done(err, user);
-
-            new Promise((res, rej) => {
-                User.create({username, userId}, (err, doc) => {
-                    if (err) rej(err);
-                    res(doc);
-                })
-            }).then((user) => done(err, user)).catch(err => done(err, user));
+            User.create({username, userId}, done);
         });
     });
 }));
@@ -50,11 +43,9 @@ passport.deserializeUser((user, done) => done(null, user));
 
 const sendView = (res, name) => res.sendFile(`${__dirname}/client/html/${name}.html`);
 const sendError = (res, err) => res.status(400).json({error: err});
+const sendJson = (res, p) => p.then(a => res.json(a));
 
-app.get('/', (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
-    return res.redirect('/app');
-});
+app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => {
     if (req.session.user) return res.redirect('/app');
     sendView(res, 'login');
@@ -70,18 +61,24 @@ app.get('/login', (req, res) => {
         });
     })(req, res, next);
 });
-app.get('/logout', (req, res) => {
-    req.session.destroy(() => {
-        req.session = null;
-        res.redirect('/login');
-    });
-});
+app.get('/logout', (req, res) => req.session.destroy(() => {
+    req.session = null;
+    res.redirect('/login');
+}));
 
 app.get('/app', ensureLoggedIn(), (req, res) => sendView(res, 'index'));
-app.get('/items', ensureLoggedIn(), (req, res) => api.items(req.session.key).then(a => res.json(a)));
-app.get('/inventory', ensureLoggedIn(), (req, res) => api.inventory(req.session.key).then(a => res.json(a)));
-app.get('/prices/:max/:item', ensureLoggedIn(), (req, res) => api.prices(req.session.key, req.params.item, req.params.max).then(a => res.json(a)));
+app.get('/items', ensureLoggedIn(), (req, res) => sendJson(res, api.items(req.session.key)));
+app.get('/inventory', ensureLoggedIn(), (req, res) => sendJson(res, api.inventory(req.session.key)));
+app.get('/prices/:max/:item', ensureLoggedIn(), (req, res) => sendJson(res, api.prices(req.session.key, req.params.item, req.params.max)));
 app.get('/account', ensureLoggedIn(), (req, res) => res.json(req.session.user));
+
+app.post('/update', ensureLoggedIn(), ({session, body}, res) => {
+    User.findOneAndUpdate({userId: session.user.userId}, body, (err, doc) => {
+        if (err) return sendError(res, err);
+        session.user = doc;
+        res.status(200).send();
+    });
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log('Express server listening on port ' + port));

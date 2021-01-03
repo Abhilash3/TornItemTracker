@@ -1,3 +1,4 @@
+import {inventory, items} from './api';
 import {parseQuery} from './query';
 import {asElement, fromClipboard, toClipboard, toMap} from './util';
 
@@ -8,9 +9,6 @@ function findTarget({target}) {
     if (!target.classList.contains('item')) return;
     return target;
 }
-
-const items = fetch('/items').then(a => a.json());
-const inventory = () => fetch('/inventory').then(a => a.json()).then(a => toMap(a, a => a.name, a => a.quantity));
 
 export function init(parent) {
     const searchTab = parent.querySelector('#search');
