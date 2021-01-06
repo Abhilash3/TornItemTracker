@@ -7,7 +7,7 @@ module.exports = {
     optimization: {minimizer: [new UglifyJsPlugin()]},
     output: {
         path: __dirname,
-        filename: './public/build/[name].js'
+        filename: './public/js/[name].js'
     },
     module: {
         rules: [{

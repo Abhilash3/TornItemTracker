@@ -41,7 +41,7 @@ passport.use('torn', new Strategy(({body: {apiKey}}, done) => {
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
-const sendView = (res, name) => res.sendFile(`${__dirname}/client/html/${name}.html`);
+const sendView = (res, name) => res.sendFile(`${__dirname}/public/${name}.html`);
 const sendError = (res, err) => res.status(400).json({error: err});
 const sendJson = (res, p) => p.then(a => res.json(a));
 
@@ -49,7 +49,8 @@ app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => {
     if (req.session.user) return res.redirect('/app');
     sendView(res, 'login');
-}).post('/login', (req, res, next) => {
+});
+app.post('/login', (req, res, next) => {
     passport.authenticate('torn', (err, user) => {
         if (err) return sendError(res, err);
         if (!user) return res.redirect('/login');
