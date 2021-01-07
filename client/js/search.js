@@ -51,7 +51,7 @@ export function init(parent) {
 
     const createBadge = count => `<span class='badge badge-secondary'>${count}</span>`;
 
-    Promise.all([items, inventory()]).then(([items, userItems]) => {
+    Promise.all([items(), inventory()]).then(([items, userItems]) => {
         const itemDomList = [];
         items.forEach((item) => {
             const {id, name} = item;
@@ -106,6 +106,6 @@ export function init(parent) {
 
 export function selected() {
     const selectedItems = document.querySelectorAll('#search div#selected .item');
-    return items.then(items => toMap(items, a => a.id))
+    return items().then(items => toMap(items, a => a.id))
         .then(map => Array.prototype.map.call(selectedItems, a => map.get(a.dataset.id)));
 }

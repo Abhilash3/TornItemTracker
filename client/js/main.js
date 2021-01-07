@@ -1,8 +1,8 @@
-import * as account from './account.js';
-import * as search from './search.js';
-import * as tracker from './tracker.js';
-import * as trader from './trader.js';
-import {asElement} from './util.js';
+import * as museum from './museum';
+import * as search from './search';
+import * as tracker from './tracker';
+import * as trader from './trader';
+import {asElement} from './util';
 
 import mainTemplate from '../template/main.html';
 
@@ -45,8 +45,8 @@ export function init(parent) {
     main.querySelector('#track-tab').addEventListener('click', async () => tracker.track(await search.selected()));
     main.querySelector('#trade-tab').addEventListener('click', async () => trader.trade(await search.selected()));
 
-    [search, tracker, trader, account].forEach(a => a.init(main));
+    [search, tracker, trader, museum].forEach(a => a.init(main));
 
     main.querySelector('ul.navbar-nav li.nav-item.active a.nav-link').click();
-    dark.click();
+    light.click();
 }

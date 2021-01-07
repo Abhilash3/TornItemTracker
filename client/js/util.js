@@ -8,18 +8,12 @@ export function asElement(str) {
 }
 
 export function asDoller(value) {
-    const floored = Math.floor(value);
+    const abs = Math.abs(value);
+    const floored = Math.floor(abs);
     const formatted = String(floored).split('').reverse()
         .reduce((acc, n, i) => acc + (i > 0 && i % 3 === 0 ? ',' : '') + n, '')
         .split('').reverse().join('');
-    return '$' + formatted + (value != floored ? (value - floored).toFixed(2).substring(1) : '');
-}
-
-export function fire(url) {
-    return fetch(url).then(response => response.json()).catch(error => {
-        console.log(error);
-        throw error;
-    });
+    return (value > 0 ? '' : '-') + '$' + formatted + (abs != floored ? (abs - floored).toFixed(2).substring(1) : '');
 }
 
 export const fromClipboard = (() => {

@@ -1,4 +1,4 @@
-import {account, prices, update} from './api';
+import {account, delayedPrices, update} from './api';
 import {asDoller, asElement, randomColor} from './util';
 import Chart from 'chart.js';
 
@@ -49,8 +49,7 @@ function trackPrices() {
     if (!chart) return;
 
     const max = values => values.reduce((a, b) => Math.max(a, b), -1);
-    const priceWithDelay = (id, i) => new Promise(res => setTimeout(() => res(prices(id)), i * 1000));
-    Promise.all(Array.from(items).map(([name, id], i) => priceWithDelay(id, i).then(prices => [name, prices[0][0]]))).then(prices => {
+    Promise.all(Array.from(items).map(([name, id], i) => delayedPrices(i, id).then(prices => [name, prices[0][0]]))).then(prices => {
         const priceMap = new Map(prices);
         updateDatasets((name, {values}) => {
             const value = priceMap.get(name);
@@ -87,14 +86,14 @@ export function init(parent) {
         });
     });
 
-    const updateAxisColor = (key, color) => {
+    const updateAxesColor = (key, color) => {
         const {gridLines, ticks} = chart.options.scales[key + 'Axes'][0];
         gridLines.zeroLineColor = color;
         ticks.fontColor = color;
         chart.update();
     };
-    trackerTab.querySelector('#xColor').addEventListener('click', () => updateAxisColor('x', randomColor()));
-    trackerTab.querySelector('#yColor').addEventListener('click', () => updateAxisColor('y', randomColor()));
+    trackerTab.querySelector('#xColor').addEventListener('click', () => updateAxesColor('x', randomColor()));
+    trackerTab.querySelector('#yColor').addEventListener('click', () => updateAxesColor('y', randomColor()));
 
     const xColor = randomColor(), yColor = randomColor();
     chart = new Chart(trackerTab.querySelector('canvas.chart').getContext('2d'), {

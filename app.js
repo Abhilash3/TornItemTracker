@@ -72,6 +72,7 @@ app.get('/items', ensureLoggedIn(), (req, res) => sendJson(res, api.items(req.se
 app.get('/inventory', ensureLoggedIn(), (req, res) => sendJson(res, api.inventory(req.session.key)));
 app.get('/prices/:max/:item', ensureLoggedIn(), (req, res) => sendJson(res, api.prices(req.session.key, req.params.item, req.params.max)));
 app.get('/account', ensureLoggedIn(), (req, res) => res.json(req.session.user));
+app.get('/details', ensureLoggedIn(), (req, res) => sendJson(res, api.details(req.session.key)));
 
 app.post('/update', ensureLoggedIn(), ({session, body}, res) => {
     User.findOneAndUpdate({userId: session.user.userId}, body, (err, doc) => {
