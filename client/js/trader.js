@@ -2,6 +2,7 @@ import {inventory, prices} from './api';
 import {asDoller, asElement, toClipboard, toMap} from './util';
 
 import counterTemplate from '../template/counter.html';
+import progressTemplate from '../template/progress.html';
 import tradeRowTemplate from '../template/tradeRow.html';
 import traderTemplate from '../template/trader.html';
 
@@ -28,15 +29,6 @@ function createCounter(min = 0, max = 0, value = max) {
     element.setAttribute('data-min', min);
     element.setAttribute('data-max', max);
     element.querySelector('input').value = value;
-
-    return element;
-}
-
-function createTradeRow({id, name}) {
-    const element = asElement(tradeRowTemplate);
-    element.setAttribute('data-id', id);
-    element.querySelector('td.name > label').innerHTML = name;
-    element.querySelector('td.value > label').innerHTML = 0;
 
     return element;
 }
@@ -87,16 +79,24 @@ export function init(parent) {
         triggerUpdate(event);
     });
 
-    traderTab.querySelector('#price-refresh').addEventListener('click', async () => {
+    traderTab.querySelector('#price-refresh').addEventListener('click', () => {
         const rows = tbody.querySelectorAll('tr.item-calc');
-        const prices = await Promise.all(Array.prototype.map.call(rows, row => priceDetails(row.dataset.id)));
+        rows.forEach((row, n) => row.querySelector('.price').innerHTML = progressTemplate);
 
-        rows.forEach((row, n) => row.querySelector('.price').innerHTML = asHtml(prices[n]));
+        const requests = Promise.all(Array.prototype.map.call(rows, row => prices(row.dataset.id)));
+        rows.forEach(async (row, n) => {
+            const prices = await requests;
+            row.querySelector('.price').innerHTML = asHtml(prices[n]);
+        });
     });
 
-    traderTab.querySelector('#inventory-refresh').addEventListener('click', async () => {
-        const userItems = await inventory();
-        tbody.querySelectorAll('tr.item-calc').forEach(row => {
+    traderTab.querySelector('#inventory-refresh').addEventListener('click', () => {
+        const rows = tbody.querySelectorAll('tr.item-calc');
+        rows.forEach(row => row.querySelector('td.inventory label').innerHTML = progressTemplate);
+
+        const request = inventory();
+        rows.forEach(async row => {
+            const userItems = await request;
             const name = row.querySelector('td.name label').innerText;
             const count = userItems.get(name) || 0;
 
@@ -133,7 +133,16 @@ export function trade(items) {
     total.innerHTML = totalValue;
     count.innerHTML = countValue;
 
-    items.filter(({id}) => !tbody.querySelector(`tr[data-id='${id}']`)).forEach(item => tbody.appendChild(createTradeRow(item)));
+    items.filter(({id}) => !tbody.querySelector(`tr[data-id='${id}']`))
+        .map(({id, name}) => {
+            const element = asElement(tradeRowTemplate);
+            element.setAttribute('data-id', id);
+            element.querySelector('td.name > label').innerHTML = name;
+            element.querySelector('td.value > label').innerHTML = 0;
+            element.querySelector('td.price').innerHTML = progressTemplate;
+
+            return element;
+        }).forEach(elem => tbody.appendChild(elem));
 
     const pricesRequest = Promise.all(items.map(({id, name}) => prices(id).then(prices => [name, prices]))).then(prices => new Map(prices));
     Promise.all([pricesRequest, inventory()]).then(([prices, inventory]) => {

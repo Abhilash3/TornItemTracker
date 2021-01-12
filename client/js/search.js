@@ -2,6 +2,7 @@ import {inventory, items} from './api';
 import {parseQuery} from './query';
 import {asElement, fromClipboard, toClipboard, toMap} from './util';
 
+import progressTemplate from '../template/progress.html';
 import searchTemplate from '../template/search.html';
 
 function findTarget({target}) {
@@ -48,10 +49,13 @@ export function init(parent) {
             .filter(a => a && !selectedIds.includes(a.dataset.id))
             .forEach(elem => elem.click());
     });
+    searched.innerHTML = progressTemplate;
 
     const createBadge = count => `<span class='badge badge-secondary'>${count}</span>`;
 
     Promise.all([items(), inventory()]).then(([items, userItems]) => {
+        searched.innerHTML = '';
+
         const itemDomList = [];
         items.forEach((item) => {
             const {id, name} = item;

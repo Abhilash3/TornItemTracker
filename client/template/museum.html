@@ -1,4 +1,4 @@
-<div class='container mt-3'>
+<div class='m-3'>
   <table class='table table-hover table-borderless'>
     <thead>
       <tr class='row'>
@@ -9,22 +9,27 @@
         </th>
         <th class='col'>
             <div class='input-group'>
-              <div class='form-control bg-light'>Items in Set</div>
+              <div class='form-control bg-light'>Item count</div>
             </div>
         </th>
         <th class='col'>
             <div class='input-group'>
-              <div class='form-control bg-light'>Points from exchange</div>
+              <div class='form-control bg-light'>Points in exchange</div>
             </div>
         </th>
         <th class='col'>
             <div class='input-group'>
-                <div class='form-control bg-light'>Sets in Inventory</div>
+                <div class='form-control bg-light'>Sets available</div>
                 <div class='input-group-append'>
                     <button id='item-refresh' class='btn btn-secondary' type='button' title='Refresh'>
                         <i class='fas fa-sync-alt'></i>
                     </button>
                 </div>
+            </div>
+        </th>
+        <th class='col'>
+            <div class='input-group'>
+                <div class='form-control bg-light'>Minimum Point Price</div>
             </div>
         </th>
         <th class='col'>
@@ -37,7 +42,7 @@
     <tbody></tbody>
     <tfoot>
       <tr class='table-warning'>
-        <td colspan='5'><strong>This uses bulk Torn api requests. Requests are reasonabily delayed.</strong></td>
+        <td colspan='5'><strong>This uses bulk Torn api requests. Hence this feature is reasonably slowed.</strong></td>
       </tr>
     </tfoot>
   </table>

@@ -4,12 +4,14 @@ const bodyParser = require('body-parser');
 const connectMongo = require('connect-mongo');
 const cookieParser = require('cookie-parser');
 const express = require('express');
-const mongoose = require('mongoose');
 const passport = require('passport');
 const session = require('express-session');
 const {Strategy} = require('passport-custom');
 const {ensureLoggedIn} = require('connect-ensure-login');
 
+const mongoose = require('./modal/mongoose');
+
+const Exchange = require('./modal/exchange.modal');
 const User = require('./modal/user.modal');
 const api = require('./js/api');
 
@@ -17,9 +19,10 @@ const app = express();
 
 const MongoStore = connectMongo(session);
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    maxAge: 24 * 60 * 60 * 1000,
     resave: false,
     saveUninitialized: false,
+    secret: process.env.SESSION_SECRET,
     store: new MongoStore({mongooseConnection: mongoose.connection}),
 }));
 app.use(passport.initialize());
@@ -47,7 +50,7 @@ const sendJson = (res, p) => p.then(a => res.json(a));
 
 app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => {
-    if (req.session.user) return res.redirect('/app');
+    if (req.session.key) return res.redirect('/app');
     sendView(res, 'login');
 });
 app.post('/login', (req, res, next) => {
@@ -62,10 +65,7 @@ app.post('/login', (req, res, next) => {
         });
     })(req, res, next);
 });
-app.get('/logout', (req, res) => req.session.destroy(() => {
-    req.session = null;
-    res.redirect('/login');
-}));
+app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/login')));
 
 app.get('/app', ensureLoggedIn(), (req, res) => sendView(res, 'index'));
 app.get('/items', ensureLoggedIn(), (req, res) => sendJson(res, api.items(req.session.key)));
@@ -73,14 +73,16 @@ app.get('/inventory', ensureLoggedIn(), (req, res) => sendJson(res, api.inventor
 app.get('/prices/:max/:item', ensureLoggedIn(), (req, res) => sendJson(res, api.prices(req.session.key, req.params.item, req.params.max)));
 app.get('/account', ensureLoggedIn(), (req, res) => res.json(req.session.user));
 app.get('/details', ensureLoggedIn(), (req, res) => sendJson(res, api.details(req.session.key)));
+app.get('/exchanges', ensureLoggedIn(), (req, res) => Exchange.find({}, (err, doc) => {
+    if (err) return sendError(res, err);
+    res.json(doc);
+}));
 
-app.post('/update', ensureLoggedIn(), ({session, body}, res) => {
-    User.findOneAndUpdate({userId: session.user.userId}, body, (err, doc) => {
-        if (err) return sendError(res, err);
-        session.user = doc;
-        res.status(200).send();
-    });
-});
+app.post('/update', ensureLoggedIn(), (req, res) => User.findOneAndUpdate({userId: req.session.user.userId}, req.body, (err, doc) => {
+    if (err) return sendError(res, err);
+    session.user = doc;
+    res.status(200).send();
+}));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log('Express server listening on port ' + port));
