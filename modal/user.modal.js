@@ -13,7 +13,12 @@ const User = new mongoose.Schema({
     },
     notify: {
         type: Boolean,
-        default: false,
+        default: true,
+    },
+    created: {
+        type: Date,
+        required: true,
+        unique: true
     },
 });
 

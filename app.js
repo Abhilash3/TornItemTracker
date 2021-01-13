@@ -38,7 +38,7 @@ passport.use('torn', new Strategy((req, done) => api.basic(req.body.apiKey).then
     if (data.error) return done(data.error);
     User.findOne({userId: data.player_id}, (err, user) => {
         if (err || user) return done(err, user);
-        User.create({username: data.name, userId: data.player_id}, done);
+        User.create({username: data.name, userId: data.player_id, created: new Date()}, done);
     });
 })));
 passport.serializeUser((user, done) => done(null, user));
