@@ -13,7 +13,7 @@ export function asDoller(value) {
     const formatted = String(floored).split('').reverse()
         .reduce((acc, n, i) => acc + (i > 0 && i % 3 === 0 ? ',' : '') + n, '')
         .split('').reverse().join('');
-    return (value > 0 ? '' : '-') + '$' + formatted + (abs != floored ? (abs - floored).toFixed(2).substring(1) : '');
+    return `${value < 0 && '-' || ''}$${formatted}${String(Number((abs - floored).toFixed(2))).substring(1)}`;
 }
 
 export const fromClipboard = (() => {
@@ -35,28 +35,26 @@ export const fromClipboard = (() => {
         if (keyCode === 27) cancel.click();
     });
 
-    return () => {
-        return new Promise(resolve => {
-            const handle = value => {
-                document.body.removeChild(userInput);
-                resolve(value);
+    return () => new Promise(resolve => {
+        const handle = value => {
+            document.body.removeChild(userInput);
+            resolve(value);
 
-                const newSubmit = submit.cloneNode(true);
-                submit.parentNode.replaceChild(newSubmit, submit);
-                submit = newSubmit;
+            const newSubmit = submit.cloneNode(true);
+            submit.parentNode.replaceChild(newSubmit, submit);
+            submit = newSubmit;
 
-                const newCancel = cancel.cloneNode(true);
-                cancel.parentNode.replaceChild(newCancel, cancel);
-                cancel = newCancel;
-            };
-            cancel.addEventListener('click', () => handle(''));
-            submit.addEventListener('click', () => handle((input.value || '').trim()));
+            const newCancel = cancel.cloneNode(true);
+            cancel.parentNode.replaceChild(newCancel, cancel);
+            cancel = newCancel;
+        };
+        cancel.addEventListener('click', () => handle(''));
+        submit.addEventListener('click', () => handle((input.value || '').trim()));
 
-            input.value = '';
-            document.body.appendChild(userInput);
-            input.focus();
-        });
-    };
+        input.value = '';
+        document.body.appendChild(userInput);
+        input.focus();
+    });
 })();
 
 export function randomColor() {
@@ -75,4 +73,4 @@ export function toClipboard(string) {
     document.body.removeChild(textArea);
 }
 
-export const toMap = (arr, idfier = a => a, mapper = a => a) => new Map(arr.map(a => [idfier(a), mapper(a)]));
+export const toMap = (arr, idfier, mapper = a => a) => new Map(arr.map(a => [idfier(a), mapper(a)]));

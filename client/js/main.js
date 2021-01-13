@@ -17,7 +17,7 @@ export function init(parent) {
 
         event.preventDefault();
         tabs.forEach(tab => {
-            if (`#${tab.getAttribute('id')}` === tabId) {
+            if ('#' + tab.getAttribute('id') === tabId) {
                 tab.classList.remove('hide');
                 tab.classList.add('active');
             } else {

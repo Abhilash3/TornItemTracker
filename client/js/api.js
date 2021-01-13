@@ -1,7 +1,11 @@
 import {toMap} from './util';
 
-const get = url => fetch(url).then(a => a.json());
-const post = (url, json) => fetch(url, {
+const fire = (...params) => fetch(...params).catch(a => {
+    console.log(a);
+    throw a;
+});
+const get = url => fire(url).then(a => a.json());
+const post = (url, json) => fire(url, {
     method: 'post', body: JSON.stringify(json), headers: {'Content-Type': 'application/json'},
 });
 const detailRequest = get('/details');

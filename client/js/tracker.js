@@ -127,7 +127,7 @@ export function init(parent) {
             },
             tooltips: {
                 callbacks: {
-                    label: ({datasetIndex, yLabel}, {datasets}) => `${datasets[datasetIndex].label}: ${asDoller(yLabel)}`,
+                    label: ({datasetIndex: i, yLabel}, {datasets}) => `${datasets[i].label}: ${asDoller(yLabel)}`,
                 },
                 mode: 'index',
             },
@@ -140,17 +140,17 @@ export function track(toTrack) {
     items.clear();
 
     const nameMap = new Map();
-    toTrack.forEach(({id, name}, i) => {
+    toTrack.forEach(({id, name}) => {
         items.set(name, id);
         nameMap.set(id, name);
         history.set(name, history.get(name) || {values: new Array(MAX_HISTORY), color: randomColor()});
     });
 
-    const details = document.querySelector('#constraints');
+    const details = document.querySelector('#tracker #constraints');
     details.innerHTML = '';
     constraints.forEach(({id, value}) => details.appendChild(asElement(`
-        <div id='${id ? ('item-' + id) : 'default'}' class='input-group'>
-            <div class='form-control'>${id ? nameMap.get(id) : 'All'}</div>
+        <div id='${id === -1 ? 'default' : ('item-' + id)}' class='input-group'>
+            <div class='form-control'>${id === -1 ? 'All' : nameMap.get(id)}</div>
             <div class='input-group-append'>
                 <span class='form-control'>${value * 100}%</span>
             </div>
