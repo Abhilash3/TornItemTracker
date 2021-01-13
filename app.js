@@ -32,15 +32,13 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/public'));
 
-passport.use('torn', new Strategy(({body: {apiKey}}, done) => {
-    api.basic(apiKey).then(({error, player_id: userId, name: username}) => {
-        if (error) return done(error);
-        User.findOne({userId}, (err, user) => {
-            if (err || user) return done(err, user);
-            User.create({username, userId}, done);
-        });
+passport.use('torn', new Strategy((req, done) => api.basic(req.body.apiKey).then(data => {
+    if (data.error) return done(data.error);
+    User.findOne({userId: data.player_id}, (err, user) => {
+        if (err || user) return done(err, user);
+        User.create({username: data.user, userId}, done);
     });
-}));
+})));
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
@@ -48,7 +46,6 @@ const sendView = (res, name) => res.sendFile(`${__dirname}/public/${name}.html`)
 const sendError = (res, err) => res.status(400).json({error: err});
 const sendJson = (res, p) => p.then(a => res.json(a));
 
-app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => {
     if (req.session.key) return res.redirect('/app');
     sendView(res, 'login');
@@ -67,10 +64,10 @@ app.post('/login', (req, res, next) => {
 });
 app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/login')));
 
-app.get('/app', ensureLoggedIn(), (req, res) => sendView(res, 'index'));
+app.get('/app', ensureLoggedIn(), (req, res) => sendView(res, 'app'));
 app.get('/items', ensureLoggedIn(), (req, res) => sendJson(res, api.items(req.session.key)));
 app.get('/inventory', ensureLoggedIn(), (req, res) => sendJson(res, api.inventory(req.session.key)));
-app.get('/prices/:max/:item', ensureLoggedIn(), (req, res) => sendJson(res, api.prices(req.session.key, req.params.item, req.params.max)));
+app.get('/prices/:max/:item', ensureLoggedIn(), ({session: {key}, params: {item, max}}, res) => sendJson(res, api.prices(key, item, max)));
 app.get('/account', ensureLoggedIn(), (req, res) => res.json(req.session.user));
 app.get('/details', ensureLoggedIn(), (req, res) => sendJson(res, api.details(req.session.key)));
 app.get('/exchanges', ensureLoggedIn(), (req, res) => Exchange.find({}, (err, doc) => {
@@ -83,6 +80,7 @@ app.post('/update', ensureLoggedIn(), (req, res) => User.findOneAndUpdate({userI
     session.user = doc;
     res.status(200).send();
 }));
+app.get('*', (req, res) => res.redirect('/login'));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log('Express server listening on port ' + port));
