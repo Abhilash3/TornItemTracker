@@ -79,7 +79,7 @@ app.get('/exchanges', ensureLoggedIn(), (req, res) => Exchange.find({}, (err, do
 
 app.post('/update', ensureLoggedIn(), (req, res) => User.findOneAndUpdate({userId: req.session.user.userId}, req.body, (err, doc) => {
     if (err) return sendError(res, err);
-    session.user = doc;
+    req.session.user = doc;
     res.status(200).send();
 }));
 app.get('*', (req, res) => res.redirect('/login'));
