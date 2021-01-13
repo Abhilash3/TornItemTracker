@@ -30,7 +30,9 @@ app.use(passport.session());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-app.use(express.static(__dirname + '/public'));
+
+app.use('/js', [ensureLoggedIn(), express.static(__dirname + '/public/js')]);
+app.use('/css', express.static(__dirname + '/public/css'));
 
 passport.use('torn', new Strategy((req, done) => api.basic(req.body.apiKey).then(data => {
     if (data.error) return done(data.error);

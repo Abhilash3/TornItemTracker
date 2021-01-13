@@ -72,7 +72,7 @@ export function init(parent) {
     const trackerTab = parent.querySelector('#tracker');
     trackerTab.appendChild(asElement(trackerTemplate));
 
-    account().then(({notify, trackers = [{value: 0.05}]}) => {
+    account().then(({notify, trackers = [{id: -1, value: 0.05}]}) => {
         disabled = !notify;
         const checkbox = document.querySelector('#notify');
         checkbox.checked = !!notify;
@@ -81,7 +81,7 @@ export function init(parent) {
         constraints = trackers.map((item) => {
             const {id, value} = item;
             const copy = Object.create(item);
-            copy.check = (item, rate) => (id && item === id || true) && rate >= value;
+            copy.check = (item, rate) => (id === -1 || item === id) && rate >= value;
             return copy;
         });
     });
@@ -138,9 +138,11 @@ export function init(parent) {
 
 export function track(toTrack) {
     items.clear();
+
+    const nameMap = new Map();
     toTrack.forEach(({id, name}, i) => {
         items.set(name, id);
-        items.set(id, name);
+        nameMap.set(id, name);
         history.set(name, history.get(name) || {values: new Array(MAX_HISTORY), color: randomColor()});
     });
 
@@ -148,7 +150,7 @@ export function track(toTrack) {
     details.innerHTML = '';
     constraints.forEach(({id, value}) => details.appendChild(asElement(`
         <div id='${id ? ('item-' + id) : 'default'}' class='input-group'>
-            <div class='form-control'>${id ? items.get(id) : 'All'}</div>
+            <div class='form-control'>${id ? nameMap.get(id) : 'All'}</div>
             <div class='input-group-append'>
                 <span class='form-control'>${value * 100}%</span>
             </div>

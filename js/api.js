@@ -71,14 +71,15 @@ module.exports.details = cacheWrapped(key => query(key, 'user', '', 'basic,battl
 
 module.exports.basic = key => query(key, 'user', '', 'basic');
 
+const pointItem = {name: 'Point'};
 module.exports.items = cacheWrapped(key => {
-    return query(key, 'torn', '', 'items')
-        .then(response => response.items || []).catch(err => ({}))
+    return query(key, 'torn', '', 'items').then(a => a.items || {})
+        .then(a => ({0: pointItem, ...a})).catch(err => ({}))
         .then(items => Object.keys(items).map(id => clone(items[id], {id})));
 }, AN_HOUR_RESET_TIME);
 
 module.exports.inventory = key => query(key, 'user', '', 'inventory')
-    .then(response => response.inventory || []).catch(err => []);
+    .then(a => a.inventory || []).catch(err => []);
 
 module.exports.prices = cacheWrapped((key, itemId, max = 5) => {
     const EMPTY = [];
