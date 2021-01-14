@@ -1,4 +1,4 @@
-import {delayedPrices, exchanges, inventory, items, prices} from './api';
+import {exchanges, exchange, inventory, items} from './api';
 import {asDoller, asElement, toMap} from './util';
 
 import progressTemplate from '../template/progress.html';
@@ -18,7 +18,7 @@ export function init(parent) {
         const row = asElement(`
             <tr class='row' data-type='${name}'>
                 <td class='col'>${name[0].toUpperCase() + name.slice(1)} Set</td>
-                <td class='col'>${items.length}</td>
+                <td class='col'>${items.map(({count: a}) => a || 1).reduce((a, b) => a + b, 0)}</td>
                 <td class='col'>${points}</td>
                 <td class='col count'></td>
                 <td class='col min'></td>
@@ -27,16 +27,14 @@ export function init(parent) {
         tbody.appendChild(row);
         rows.push(row);
 
-        const count = row.querySelector('.count');
-        const min = row.querySelector('.min');
-        const profit = row.querySelector('.profit');
+        const minElem = row.querySelector('.min');
+        const profitElem = row.querySelector('.profit');
         row.addEventListener('click', async () => {
-            min.innerHTML = profit.innerHTML = progressTemplate;
+            minElem.innerHTML = profitElem.innerHTML = progressTemplate;
 
-            const [pointPrice, ...itemPrices] = await Promise.all([0, ...items].map((a, i) => delayedPrices(i, a, 1).then(([[a]]) => a)));
-            const cost = itemPrices.reduce((acc, a) => acc + a);
-            min.innerHTML = asDoller(cost / points);
-            profit.innerHTML = asDoller(points * pointPrice - cost);
+            const {profit, min} = await exchange(name);
+            minElem.innerHTML = asDoller(min);
+            profitElem.innerHTML = asDoller(profit);
         });
     }));
 
@@ -47,8 +45,10 @@ export function init(parent) {
             const items = await itemMap;
             const inventory = await request;
             const sets = await exchangeSets;
-            row.querySelector('.count').innerHTML = sets.get(row.dataset.type).items
-                .map(a => inventory.get(items.get(a).name) || 0).reduce((a, b) => a > b ? b : a);
+            row.querySelector('.count').innerHTML = sets.get(row.dataset.type).items.map(({id, count = 1}) => {
+                const num = inventory.get(items.get(id).name) || 0;
+                return Math.floor(num / count);
+            }).reduce((a, b) => a > b ? b : a);
         });
     });
 

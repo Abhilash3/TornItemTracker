@@ -77,7 +77,7 @@ module.exports.items = cacheWrapped(key => {
 module.exports.inventory = key => query(key, 'user', '', 'inventory')
     .then(a => a.inventory || []).catch(err => []);
 
-module.exports.prices = cacheWrapped((key, itemId, max = 5) => {
+const prices = cacheWrapped((key, itemId, max = 5) => {
     const EMPTY = [];
     return (Number(itemId) && itemPrices(key, itemId) || pointPrices(key)).then(arr => {
         if (!arr.length) return EMPTY;
@@ -89,3 +89,5 @@ module.exports.prices = cacheWrapped((key, itemId, max = 5) => {
         return Array.from(priceLog).sort((a, b) => a[0] - b[0]).filter((n, i) => i < max);
     }).catch(err => EMPTY);
 });
+
+module.exports.prices = (key, ids, max) => Promise.all(ids.map((a, i) => new Promise(res => setTimeout(() => res(prices(key, a, max)), i * 1000))));

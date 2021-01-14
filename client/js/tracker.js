@@ -1,4 +1,4 @@
-import {account, delayedPrices, update} from './api';
+import {account, prices, update} from './api';
 import {asDoller, asElement, randomColor} from './util';
 import Chart from 'chart.js';
 
@@ -49,7 +49,8 @@ function trackPrices() {
     if (!chart) return;
 
     const max = values => values.reduce((a, b) => Math.max(a, b), -1);
-    Promise.all(Array.from(items).map(([name, id], i) => delayedPrices(i, id).then(prices => [name, prices[0][0]]))).then(prices => {
+    const values = Array.from(items);
+    prices(values.map(([, id]) => id), 1).then(a => a.map(([[b]], i) => [values[i][0], b])).then(prices => {
         const priceMap = new Map(prices);
         updateDatasets((name, {values}) => {
             const value = priceMap.get(name);
@@ -74,14 +75,15 @@ export function init(parent) {
 
     account().then(({notify, trackers = [{id: -1, value: 0.05}]}) => {
         disabled = !notify;
-        const checkbox = document.querySelector('#notify');
+        const checkbox = trackerTab.querySelector('#notify');
         checkbox.checked = !!notify;
         checkbox.addEventListener('change', () => update({notify: disabled}).then(() => disabled = !disabled));
 
         constraints = trackers.map((item) => {
             const {id, value} = item;
             const copy = Object.create(item);
-            copy.check = (item, rate) => (id === -1 || item === id) && rate >= value;
+            if (id === -1) copy.check = (item, rate) => rate <= (1 - value);
+            else copy.check = (item, rate) => Number(item) === id && rate <= (1 - value);
             return copy;
         });
     });
