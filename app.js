@@ -72,17 +72,17 @@ app.get('/inventory', ensureLoggedIn(), (req, res) => sendJson(res, api.inventor
 app.get('/prices/:max/:items', ensureLoggedIn(), ({session: {key}, params: {items, max}}, res) => sendJson(res, api.prices(key, items.split(','), max)));
 app.get('/account', ensureLoggedIn(), (req, res) => res.json(req.session.user));
 app.get('/details', ensureLoggedIn(), (req, res) => sendJson(res, api.details(req.session.key)));
-app.get('/exchanges', ensureLoggedIn(), (req, res) => res.json(exchangeSets));
-app.get('/exchange/:name', ensureLoggedIn(), ({session: {key}, params: {name}}, res) => {
-    const {items = [], points = 0} = exchangeSets.find(({type}) => type === name) || {};
-    if (items.length === 0) return res.json({});
+app.get('/exchanges', ensureLoggedIn(), (req, res) => Exchange.find({}, (err, doc) => res.json(doc)));
+app.get('/exchange/:type', ensureLoggedIn(), ({session: {key}, params: {type}}, res) => Exchange.findOne({type}, (err, doc) => {
+    if (!doc) return res.json({});
+    const {items = [], points = 0} = doc;
     api.prices(key, [0, ...items.map(({id}) => id)], 1)
         .then(a => a.map(([[b]], i) => b * (i === 0 ? points : items[i - 1].count || 1)))
         .then(([pointPrices, ...itemPrices]) => {
             const totalCost = itemPrices.reduce((sum, a) => sum + a);
             res.json({profit: pointPrices - totalCost, min: totalCost / points});
         });
-});
+}));
 
 app.post('/update', ensureLoggedIn(), (req, res) => User.findOneAndUpdate({userId: req.session.user.userId}, req.body, (err, doc) => {
     if (err) return sendError(res, err);
