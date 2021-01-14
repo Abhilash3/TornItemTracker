@@ -45,8 +45,7 @@ function updateDatasets(process = () => true) {
 }
 
 function trackPrices() {
-    request = setTimeout(trackPrices, 15 * 1000);
-    if (!chart) return;
+    if (!chart || !items.size) return;
 
     const max = values => values.reduce((a, b) => Math.max(a, b), -1);
     const values = Array.from(items);
@@ -159,5 +158,8 @@ export function track(toTrack) {
         </div>`)));
 
 
-    if (!request) trackPrices();
+    if (!request) {
+        trackPrices();
+        request = setInterval(trackPrices, 15 * 1000);
+    }
 }
