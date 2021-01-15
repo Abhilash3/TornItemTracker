@@ -1,6 +1,7 @@
+import * as account from './account';
 import * as museum from './museum';
-import * as tracker from './tracker';
-import * as trader from './trader';
+import * as track from './track';
+import * as trade from './trade';
 import {asElement} from './util';
 
 import mainTemplate from '../template/main.html';
@@ -24,7 +25,6 @@ export function init(parent) {
         parent.classList.add('dark');
     });
 
-    [tracker, trader, museum].forEach(a => a.init(main));
-
+    [account, track, trade, museum].forEach(a => a.init(main));
     light.click();
 }

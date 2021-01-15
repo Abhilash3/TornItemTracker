@@ -1,11 +1,18 @@
 <tr class='row item-calc'>
-  <td class='col m-auto name row'>
-    <button class='col-1 btn btn-bg' type='button' title='Remove'><i class='fas fa-times-circle'></i></button>
-    <label class='col col-form-label'></label>
+  <td class='info col m-auto row'>
+    <div class='col' style='align-self: center;'><button class='btn btn-lg' type='button' title='Remove'><i class='fas fa-times-circle'></i></button></div>
+    <div class='col' style='align-self: center;'><label class='name col-form-label'></label></div>
+    <div class='col' style='align-self: center;'><label class='inventory badge badge-secondary'></label></div>
   </td>
   <td class='col m-auto price d-flex flex-wrap justify-content-center'></td>
-  <td class='col m-auto'><input type='number' class='form-control' placeholder='0' /></td>
-  <td class='col m-auto inventory'></td>
-  <td class='col m-auto count'></td>
-  <td class='col m-auto value'><label class='col-form-label'>0</label></td>
+  <td class='col m-auto'>
+    <div class='input-group'>
+      <div class='input-group-prepend'>
+        <span class='input-group-text d-none d-md-block'>Price</span>
+        <span class='input-group-text d-md-none'><i class='fas fa-dollar-sign'></i></span>
+      </div>
+      <input type='number' class='form-control' placeholder='0' />
+    </div>
+    <div class='count mt-3'></div>
+  </td>
 </tr>

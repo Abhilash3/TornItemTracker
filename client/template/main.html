@@ -1,21 +1,50 @@
 <div>
   <nav class='navbar navbar-expand'>
     <div class='navbar-collapse'>
-      <ul class='nav mr-auto'>
-        <li class='nav-item'><a id='track-tab' class='nav-link active' data-toggle='tab' role='tab' href='#tracker' aria-controls='track' aria-selected='true'><h5>Track</h5></a></li>
-        <li class='nav-item'><a id='trade-tab' class='nav-link' data-toggle='tab' role='tab' href='#trader' aria-controls='trade' aria-selected='false'><h5>Trade</h5></a></li>
-        <li class='nav-item'><a id='museum-tab' class='nav-link' data-toggle='tab' role='tab' href='#museum' aria-controls='museum' aria-selected='false'><h5>Museum</h5></a></li>
+      <ul class='nav nav-tabs mr-auto'>
+        <li class='nav-item'>
+          <a id='account-tab' class='nav-link active' data-toggle='tab' role='tab' href='#account' aria-controls='account' aria-selected='true'>
+            <h5 class='d-none d-md-block'>Account</h5>
+            <h5 class='d-md-none'><i class='fas fa-user-circle'></i></h5>
+          </a>
+        </li>
+        <li class='nav-item'>
+          <a id='track-tab' class='nav-link' data-toggle='tab' role='tab' href='#track' aria-controls='track' aria-selected='false'>
+            <h5 class='d-none d-md-block'>Track</h5>
+            <h5 class='d-md-none'><i class='fas fa-chart-line'></i></h5>
+          </a>
+        </li>
+        <li class='nav-item'>
+          <a id='trade-tab' class='nav-link' data-toggle='tab' role='tab' href='#trade' aria-controls='trade' aria-selected='false'>
+            <h5 class='d-none d-md-block'>Trade</h5>
+            <h5 class='d-md-none'><i class='fas fa-people-arrows'></i></h5>
+          </a>
+        </li>
+        <li class='nav-item'>
+          <a id='museum-tab' class='nav-link' data-toggle='tab' role='tab' href='#museum' aria-controls='museum' aria-selected='false'>
+            <h5 class='d-none d-md-block'>Museum</h5>
+            <h5 class='d-md-none'><i class='fas fa-parking'></i></h5>
+          </a>
+        </li>
       </ul>
       <div class='form-inline my-2 my-0'>
-        <button id='light' class='btn btn-outline-dark my-2 my-sm-0' title='Light Mode'>Light</button>
-        <button id='dark' class='btn btn-outline-secondary my-2 my-sm-0' title='Dark mode'>Dark</button>
-        <a class='btn btn-outline-primary my-2 my-sm-0 ml-3' href='/logout'>Logout</a>
+        <div id='light' class='my-2 my-sm-0'>
+          <button class='d-none d-md-block btn btn-outline-dark' title='Light Mode'>Light</button>
+          <h5 class='d-md-none'><i class='fas fa-sun'></i></h5>
+        </div>
+        <div id='dark' class='my-2 my-sm-0'>
+          <button class='d-none d-md-block btn btn-outline-secondary' title='Dark mode'>Dark</button>
+          <h5 class='d-md-none'><i class='fas fa-moon'></i></h5>
+        </div>
+        <a class='d-none d-md-block btn btn-outline-primary my-2 my-sm-0 ml-3' href='/logout'>Logout</a>
+        <a class='d-md-none my-2 my-sm-0 ml-3' href='/logout'><h5 class='d-md-none'><i class='fas fa-sign-out-alt'></i></h5></a>
       </div>
     </div>
   </nav>
   <div class='tab-content'>
-    <div id='tracker' class='tab-pane fade show active' role='tabpanel' aria-labelledby='track-tab'></div>
-    <div id='trader' class='tab-pane fade' role='tabpanel' aria-labelledby='trade-tab'></div>
+    <div id='account' class='tab-pane fade show active' role='tabpanel' aria-labelledby='account-tab'></div>
+    <div id='track' class='tab-pane fade' role='tabpanel' aria-labelledby='track-tab'></div>
+    <div id='trade' class='tab-pane fade' role='tabpanel' aria-labelledby='trade-tab'></div>
     <div id='museum' class='tab-pane fade' role='tabpanel' aria-labelledby='museum-tab'></div>
   </div>
 </div>

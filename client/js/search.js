@@ -3,7 +3,6 @@ import {parseQuery} from './query';
 import {asElement, asSearchItem, fromClipboard, toClipboard, toMap} from './util';
 
 import progressTemplate from '../template/progress.html';
-import searchTemplate from '../template/search.html';
 
 function findTarget({target}) {
     if (target.nodeName.toLowerCase() === 'span') target = target.parentNode;

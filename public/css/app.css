@@ -8,18 +8,8 @@ body {
 }
 
 @media only screen and (max-width: 1200px) {
-  #axes-color {
+  #axes-color, #exchanges button span.name {
     writing-mode: vertical-rl;
-  }
-}
-
-@media screen and (min-width: 320px) and (max-width: 767px) and (orientation: portrait) {
-  html {
-    -webkit-transform: rotate(90deg);
-    -moz-transform: rotate(90deg);
-    -ms-transform: rotate(90deg);
-    -o-transform: rotate(90deg);
-    transform: rotate(90deg);
   }
 }
 

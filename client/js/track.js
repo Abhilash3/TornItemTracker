@@ -3,7 +3,7 @@ import {itemSearch} from './search';
 import {asDoller, asElement, asSearchItem, randomColor} from './util';
 import Chart from 'chart.js';
 
-import trackerTemplate from '../template/tracker.html';
+import trackTemplate from '../template/track.html';
 
 const MAX_HISTORY = 1000;
 const history = new Map();
@@ -69,13 +69,13 @@ function trackPrices() {
     });
 }
 
-function startTrack({id, name}) {
+function startTrack(tab, {id, name}) {
     items.set(name, id);
     history.set(name, history.get(name) || {values: new Array(MAX_HISTORY), color: randomColor()});
 
     const constraint = constraints.find(a => a.id === id);
     if (constraint) {
-        document.querySelector('#tracker #constraints').appendChild(asElement(`
+        tab.querySelector('#constraints').appendChild(asElement(`
             <div id='item-${id}' class='input-group'>
                 <div class='form-control'>${name}</div>
                 <div class='input-group-append'>
@@ -85,21 +85,21 @@ function startTrack({id, name}) {
     }
 }
 
-function stopTrack(id) {
+function stopTrack(tab, id) {
     items.delete(id);
-    const elem = document.querySelector('#tracker #constraints #item-' + id);
+    const elem = tab.querySelector('#constraints #item-' + id);
     if (elem) {
         elem.parentNode.removeChild(elem);
     }
 }
 
 export function init(parent) {
-    const trackerTab = parent.querySelector('#tracker');
-    trackerTab.appendChild(asElement(trackerTemplate));
+    const trackTab = parent.querySelector('#track');
+    trackTab.appendChild(asElement(trackTemplate));
 
     account().then(({notify, trackers = [{id: -1, value: 0.05}]}) => {
         disabled = !notify;
-        const checkbox = trackerTab.querySelector('#notify');
+        const checkbox = trackTab.querySelector('#notify');
         checkbox.checked = !!notify;
         checkbox.addEventListener('change', () => update({notify: disabled}).then(() => disabled = !disabled));
 
@@ -118,28 +118,30 @@ export function init(parent) {
         ticks.fontColor = color;
         chart.update();
     };
-    trackerTab.querySelector('#xColor').addEventListener('click', () => updateAxesColor('x', randomColor()));
-    trackerTab.querySelector('#yColor').addEventListener('click', () => updateAxesColor('y', randomColor()));
+    trackTab.querySelector('#xColor').addEventListener('click', () => updateAxesColor('x', randomColor()));
+    trackTab.querySelector('#yColor').addEventListener('click', () => updateAxesColor('y', randomColor()));
 
-    const selected = tracker.querySelector('#selected');
+    const selected = trackTab.querySelector('#selected');
     const unSelect = itemSearch(
-        tracker.querySelector('#search-item'),
-        tracker.querySelector('#search-result'),
+        trackTab.querySelector('#search-item'),
+        trackTab.querySelector('#search-result'),
         item => {
             selected.appendChild(asSearchItem(item.id, item.name));
-            startTrack(item);
+            startTrack(trackTab, item);
         });
 
     selected.addEventListener('click', event => {
         if (!event.target.classList.contains('item')) return;
         event.preventDefault();
 
-        stopTrack(event.target.dataset.id);
-        unSelect(event.target.dataset.id);
+        event.target.parentNode.removeChild(event.target);
+        const {id} = event.target.dataset;
+        stopTrack(trackTab, id);
+        unSelect(id);
     });
 
     const xColor = randomColor(), yColor = randomColor();
-    chart = new Chart(trackerTab.querySelector('canvas.chart').getContext('2d'), {
+    chart = new Chart(trackTab.querySelector('canvas.chart').getContext('2d'), {
         data: {
             datasets: [],
             labels: new Array(MAX_HISTORY).fill(0).map((a, b) => MAX_HISTORY - b),
