@@ -1,22 +1,21 @@
 <div>
-    <nav class='navbar navbar-expand-lg'>
-        <div class='navbar-collapse'>
-            <ul class='navbar-nav mr-auto'>
-                <li class='nav-item active'><h5><a id='search-tab' class='nav-link' href='#search'>Search</a></h5></li>
-                <li class='nav-item'><h5><a id='track-tab' class='nav-link' href='#tracker'>Track</a></h5></li>
-                <li class='nav-item'><h5><a id='trade-tab' class='nav-link' href='#trader'>Trade</a></h5></li>
-                <li class='nav-item divider'></li>
-                <li class='nav-item'><h5><a id='museum-tab' class='nav-link' href='#museum'>Museum</a></h5></li>
-            </ul>
-            <div class='form-inline my-2 my-lg-0'>
-                <button id='light' class='btn btn-outline-dark my-2 my-sm-0' title='Light Mode'>Light</button>
-                <button id='dark' class='btn btn-outline-secondary my-2 my-sm-0' title='Dark mode'>Dark</button>
-                <a class='btn btn-outline-primary my-2 my-sm-0 ml-3' href='/logout'>Logout</a>
-            </div>
-        </div>
-    </nav>
-    <div id='search' class='tab'></div>
-    <div id='tracker' class='tab'></div>
-    <div id='trader' class='tab'></div>
-    <div id='museum' class='tab'></div>
+  <nav class='navbar navbar-expand'>
+    <div class='navbar-collapse'>
+      <ul class='nav mr-auto'>
+        <li class='nav-item'><a id='track-tab' class='nav-link active' data-toggle='tab' role='tab' href='#tracker' aria-controls='track' aria-selected='true'><h5>Track</h5></a></li>
+        <li class='nav-item'><a id='trade-tab' class='nav-link' data-toggle='tab' role='tab' href='#trader' aria-controls='trade' aria-selected='false'><h5>Trade</h5></a></li>
+        <li class='nav-item'><a id='museum-tab' class='nav-link' data-toggle='tab' role='tab' href='#museum' aria-controls='museum' aria-selected='false'><h5>Museum</h5></a></li>
+      </ul>
+      <div class='form-inline my-2 my-0'>
+        <button id='light' class='btn btn-outline-dark my-2 my-sm-0' title='Light Mode'>Light</button>
+        <button id='dark' class='btn btn-outline-secondary my-2 my-sm-0' title='Dark mode'>Dark</button>
+        <a class='btn btn-outline-primary my-2 my-sm-0 ml-3' href='/logout'>Logout</a>
+      </div>
+    </div>
+  </nav>
+  <div class='tab-content'>
+    <div id='tracker' class='tab-pane fade show active' role='tabpanel' aria-labelledby='track-tab'></div>
+    <div id='trader' class='tab-pane fade' role='tabpanel' aria-labelledby='trade-tab'></div>
+    <div id='museum' class='tab-pane fade' role='tabpanel' aria-labelledby='museum-tab'></div>
+  </div>
 </div>

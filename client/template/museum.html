@@ -1,49 +1,6 @@
 <div class='m-3'>
-  <table class='table table-hover table-borderless'>
-    <thead>
-      <tr class='row'>
-        <th class='col'>
-            <div class='input-group'>
-              <div class='form-control bg-light'>Type</div>
-            </div>
-        </th>
-        <th class='col'>
-            <div class='input-group'>
-              <div class='form-control bg-light'>Item count</div>
-            </div>
-        </th>
-        <th class='col'>
-            <div class='input-group'>
-              <div class='form-control bg-light'>Points in exchange</div>
-            </div>
-        </th>
-        <th class='col'>
-            <div class='input-group'>
-                <div class='form-control bg-light'>Sets available</div>
-                <div class='input-group-append'>
-                    <button id='item-refresh' class='btn btn-secondary' type='button' title='Refresh'>
-                        <i class='fas fa-sync-alt'></i>
-                    </button>
-                </div>
-            </div>
-        </th>
-        <th class='col'>
-            <div class='input-group'>
-                <div class='form-control bg-light'>Minimum Point Price</div>
-            </div>
-        </th>
-        <th class='col'>
-            <div class='input-group'>
-                <div class='form-control bg-light'>Profit / Loss</div>
-            </div>
-        </th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-    <tfoot>
-      <tr class='table-warning'>
-        <td colspan='5'><strong>This uses bulk Torn api requests. Hence this feature is reasonably slowed.</strong></td>
-      </tr>
-    </tfoot>
-  </table>
+  <div class='alert alert-warning'>
+    <strong class='label'>This uses bulk Torn api requests. Hence this feature is reasonably slowed.</strong>
+  </div>
+  <div id='exchanges' class='row'></div>
 </div>

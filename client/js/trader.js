@@ -1,4 +1,6 @@
-import {inventory, prices} from './api';
+import {prices} from './api';
+import {parseQuery} from './query';
+import {inventoryRefresh, inventorySearch} from './search';
 import {asDoller, asElement, toClipboard, toMap} from './util';
 
 import counterTemplate from '../template/counter.html';
@@ -13,10 +15,10 @@ import traderTemplate from '../template/trader.html';
 })();
 
 function closest(element, selector) {
-    while (element !== null && !element.matches(selector)) {
+    while (element !== document && !element.matches(selector)) {
         element = element.parentNode;
     }
-    return element;
+    return element === document ? null : element;
 }
 
 const asHtml = (() => {
@@ -36,6 +38,20 @@ function createCounter(min = 0, max = 0, value = max) {
 let tbody;
 let count;
 let total;
+
+function asTradeRow({id, name}, count) {
+    const element = asElement(tradeRowTemplate);
+    element.setAttribute('data-id', id);
+    element.querySelector('td.name > label').innerHTML = name;
+    element.querySelector('td.value > label').innerHTML = 0;
+    element.querySelector('td.inventory').innerHTML = `<label class='col-form-label'>${count}</label>`;
+    element.querySelector('td.count').appendChild(createCounter(0, count));
+
+    element.querySelector('td.price').innerHTML = progressTemplate;
+    prices([id]).then(([a]) => element.querySelector('td.price').innerHTML = asHtml(a));
+
+    return element;
+}
 
 export function init(parent) {
     const traderTab = parent.querySelector('#trader');
@@ -60,6 +76,7 @@ export function init(parent) {
         let target = event.target;
         if (target.nodeName.toLowerCase() === 'i') target = target.parentNode;
         if (target.nodeName.toLowerCase() !== 'button') return;
+        if (closest(target, 'div.plus-minus') === null) return;
         event.preventDefault();
 
         const plusMinus = closest(target, 'div.plus-minus');
@@ -79,6 +96,27 @@ export function init(parent) {
         triggerUpdate(event);
     });
 
+    const unSelect = inventorySearch(
+        traderTab.querySelector('table#calc thead #search-inventory'),
+        traderTab.querySelector('table#calc thead #search-list'),
+        (item, value) => {
+            tbody.appendChild(asTradeRow(item, value));
+            count.innerHTML = Number(count.innerHTML) + Number(value);
+        });
+
+    tbody.addEventListener('click', event => {
+        let target = event.target;
+        if (closest(target, 'td.name') === null) return;
+        event.preventDefault();
+
+        const row = closest(target, 'tr.item-calc');
+        const {id} = row.dataset;
+        row.parentNode.removeChild(row);
+        count.innerHTML = Number(count.innerHTML) - row.querySelector('td.count input').value;
+
+        unSelect(id);
+    });
+
     traderTab.querySelector('#price-refresh').addEventListener('click', () => {
         const rows = tbody.querySelectorAll('tr.item-calc');
         rows.forEach((row, n) => row.querySelector('.price').innerHTML = progressTemplate);
@@ -93,7 +131,7 @@ export function init(parent) {
     traderTab.querySelector('#inventory-refresh').addEventListener('click', () => {
         const rows = tbody.querySelectorAll('tr.item-calc');
         rows.forEach(row => row.querySelector('td.inventory').innerHTML = progressTemplate);
-        const request = inventory();
+        const request = inventoryRefresh();
         rows.forEach(async row => {
             const userItems = await request;
             const name = row.querySelector('td.name label').innerText;
@@ -116,48 +154,5 @@ export function init(parent) {
         }, '');
 
         if (log !== '') toClipboard(`${log}\nTotal: ${text(total)}`);
-    });
-}
-
-export function trade(items) {
-    const itemMap = toMap(items, a => a.name);
-    let countValue = Number(count.innerHTML), totalValue = Number(total.innerHTML);
-    Array.prototype.forEach.call(tbody.querySelectorAll('tr'), tr => {
-        if (!itemMap.has(tr.querySelector('td.name > label').innerHTML)) {
-            countValue -= Number(tr.querySelector('td.inventory > label').innerHTML);
-            totalValue -= Number(tr.querySelector('td.value > label').innerHTML);
-            tbody.removeChild(tr);
-        }
-    });
-    total.innerHTML = totalValue;
-    count.innerHTML = countValue;
-
-    items.filter(({id}) => !tbody.querySelector(`tr[data-id='${id}']`)).forEach(({id, name}) => {
-        const element = asElement(tradeRowTemplate);
-        element.setAttribute('data-id', id);
-        element.querySelector('td.name > label').innerHTML = name;
-        element.querySelector('td.value > label').innerHTML = 0;
-        element.querySelector('td.price').innerHTML = progressTemplate;
-        element.querySelector('td.inventory').innerHTML = progressTemplate;
-
-        tbody.appendChild(element);
-    });
-
-    const priceRequest = prices(items.map(({id}) => id)).then(a => a.map((b, i) => [items[i].name, b])).then(a => new Map(a));
-    Promise.all([priceRequest, inventory()]).then(([prices, inventory]) => {
-        Array.prototype.forEach.call(tbody.querySelectorAll('tr'), tr => {
-            const name = tr.querySelector('td.name > label').innerHTML;
-            const quantity = inventory.get(name) || 0;
-
-            tr.querySelector('td.price').innerHTML = asHtml(prices.get(name) || []);
-            tr.querySelector('td.inventory').innerHTML = `<label class='col-form-label'>${quantity}</label>`;
-
-            const counter = tr.querySelector('td.count');
-            if (counter.querySelector('.plus-minus') == null) {
-                counter.appendChild(createCounter(0, quantity));
-                countValue += quantity;
-            }
-        });
-        count.innerHTML = countValue;
     });
 }

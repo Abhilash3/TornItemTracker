@@ -1,10 +1,16 @@
-import userInputTemplate from '../template/userInput.html';
-import itemImportTemplate from '../template/itemImport.html';
-
 export function asElement(str) {
     const template = document.createElement('template');
     template.innerHTML = str.trim();
     return template.content.firstChild;
+}
+
+export function asSearchItem(id, name, count) {
+    const item = asElement(`<div class='item bg-light rounded d-inline-flex p-2' data-id='${id}'>${name}</div>`);
+    if (count) {
+        item.setAttribute('data-count', count);
+        item.appendChild(asElement(`<span class='badge badge-secondary'>${count}</span>`));
+    }
+    return item;
 }
 
 export function asDoller(value) {
@@ -15,47 +21,6 @@ export function asDoller(value) {
         .split('').reverse().join('');
     return `${value < 0 && '-' || ''}$${formatted}${String(Number((abs - floored).toFixed(2))).substring(1)}`;
 }
-
-export const fromClipboard = (() => {
-    const userInput = asElement(userInputTemplate);
-    const itemImport = asElement(itemImportTemplate);
-
-    ['.modal-header', '.modal-footer']
-        .map(selector => userInput.querySelector(selector))
-        .forEach(elem => elem.parentNode.removeChild(elem));
-
-    userInput.querySelector('.modal-body').appendChild(itemImport);
-
-    let submit = itemImport.querySelector('#submit');
-    let cancel = itemImport.querySelector('#cancel');
-    const input = itemImport.querySelector('input');
-
-    input.addEventListener('keyup', ({keyCode}) => {
-        if (keyCode === 13) submit.click();
-        if (keyCode === 27) cancel.click();
-    });
-
-    return () => new Promise(resolve => {
-        const handle = value => {
-            document.body.removeChild(userInput);
-            resolve(value);
-
-            const newSubmit = submit.cloneNode(true);
-            submit.parentNode.replaceChild(newSubmit, submit);
-            submit = newSubmit;
-
-            const newCancel = cancel.cloneNode(true);
-            cancel.parentNode.replaceChild(newCancel, cancel);
-            cancel = newCancel;
-        };
-        cancel.addEventListener('click', () => handle(''));
-        submit.addEventListener('click', () => handle((input.value || '').trim()));
-
-        input.value = '';
-        document.body.appendChild(userInput);
-        input.focus();
-    });
-})();
 
 export function randomColor() {
     const col = () => Math.floor(Math.random() * 255);

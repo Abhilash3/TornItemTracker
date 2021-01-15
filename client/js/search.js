@@ -1,6 +1,6 @@
 import {inventory, items} from './api';
 import {parseQuery} from './query';
-import {asElement, fromClipboard, toClipboard, toMap} from './util';
+import {asElement, asSearchItem, fromClipboard, toClipboard, toMap} from './util';
 
 import progressTemplate from '../template/progress.html';
 import searchTemplate from '../template/search.html';
@@ -11,105 +11,57 @@ function findTarget({target}) {
     return target;
 }
 
-export function init(parent) {
-    const searchTab = parent.querySelector('#search');
-    searchTab.appendChild(asElement(searchTemplate));
+const itemRequest = items();
+let request = inventory();
 
-    const searched = searchTab.querySelector('div#searched');
-    const selected = searchTab.querySelector('div#selected');
-
-    searched.addEventListener('click', event => {
-        const target = findTarget(event);
-        if (!target) return;
-
+function initSearch(search, result, callback, considerItems) {
+    let searched = [];
+    const selected = new Map();
+    const createSearchItem = (id, name, count) => asSearchItem(id, name, considerItems && count);
+    search.addEventListener('keyup', async event => {
+        if (event.keyCode !== 13) return;
         event.preventDefault();
-        const clone = target.cloneNode(true);
-        clone.classList.remove('hide');
-        selected.appendChild(clone);
-        target.classList.add('hide');
+        const value = event.target.value.trim();
+        result.innerHTML = '';
+        searched = [];
+        if (!value) return;
+
+        result.innerHTML = progressTemplate;
+        const query = parseQuery(value);
+        const itemCount = await request;
+        searched = (await itemRequest)
+            .filter(a => !selected.has(a.id) && (!considerItems || !!itemCount.get(a.name)) && query(a)).slice(0, 10);
+        result.innerHTML = '';
+        searched.forEach(({id, name}) => result.appendChild(createSearchItem(id, name, itemCount.get(name))));
     });
-    selected.addEventListener('click', event => {
-        const target = findTarget(event);
-        if (!target) return;
 
+    result.addEventListener('click', ({target}) => {
+        if (!target.classList.contains('item')) return;
         event.preventDefault();
-        searched.querySelector(`#item-${target.dataset.id}`).classList.remove('hide');
+
+        const item = searched.find(a => a.id === target.dataset.id);
+        selected.set(item.id, item);
         target.parentNode.removeChild(target);
+
+        callback(item, target.dataset.count);
     });
 
-    searchTab.querySelector('#export').addEventListener('click', event => {
-        toClipboard(Array.prototype.map.call(selected.querySelectorAll('.item'), elem => elem.dataset.id).join(','));
-    });
-
-    searchTab.querySelector('#import').addEventListener('click', async () => {
-        const selectedIds = Array.prototype.map.call(selected.querySelectorAll('.item'), a => a.dataset.id);
-
-        (await fromClipboard()).split(',')
-            .map(a => searched.querySelector(`#item-${a.trim()}`))
-            .filter(a => a && !selectedIds.includes(a.dataset.id))
-            .forEach(elem => elem.click());
-    });
-    searched.innerHTML = progressTemplate;
-
-    const createBadge = count => `<span class='badge badge-secondary'>${count}</span>`;
-
-    Promise.all([items(), inventory()]).then(([items, userItems]) => {
-        searched.innerHTML = '';
-
-        const itemDomList = [];
-        items.forEach((item) => {
-            const {id, name} = item;
-            const quantity = userItems.get(name) || 0;
-            item.count = quantity;
-            const element = asElement(`
-                <div class='item bg-light rounded d-lg-inline-flex p-2' id='item-${id}' data-id='${id}'>
-                    <span>${name}</span>${quantity && createBadge(quantity) || ''}
-                </div>`);
-            searched.appendChild(element);
-            itemDomList.push(element);
-        });
-
-        searchTab.querySelector('#refresh').addEventListener('click', async event => {
-            event.preventDefault();
-
-            const newItems = await inventory();
-            const containers = [searched, selected];
-            items.filter(({name}) => newItems.get(name) !== userItems.get(name)).forEach(item => {
-                const {id, name} = item;
-                containers.map(elem => elem.querySelector(`#item-${id}`)).filter(a => a).forEach(elem => {
-                    const quantity = newItems.get(name) || 0;
-                    const badge = elem.querySelector('span.badge');
-
-                    if (badge && quantity) {
-                        badge.innerHTML = quantity;
-                    } else if (badge) {
-                        elem.removeChild(badge);
-                    } else if (quantity) {
-                        elem.appendChild(asElement(createBadge(quantity)));
-                    }
-                    item.count = quantity;
-                });
-            });
-        });
-
-        searchTab.querySelector('input#search-item').addEventListener('keyup', event => {
-            if (event.keyCode !== 13) return;
-            event.preventDefault();
-
-            const query = parseQuery(event.target.value.trim());
-
-            const itemMap = toMap(items, a => a.id);
-            const selectedSet = new Set(Array.prototype.map.call(selected.querySelectorAll('.item'), a => a.dataset.id));
-            itemDomList.forEach(({classList, dataset: {id}}) => {
-                classList.remove('hide');
-                if (selectedSet.has(id) || !query(itemMap.get(id))) classList.add('hide');
-            });
-        });
+    return id => request.then(a => {
+        const {name} = selected.get(id);
+        result.appendChild(createSearchItem(id, name, a.get(name)));
+        selected.delete(id);
     });
 }
 
-export function selected() {
-    const selectedItems = document.querySelectorAll('#search div#selected .item');
-    return items().then(items => toMap(items, a => a.id))
-        .then(map => Array.prototype.map.call(selectedItems, a => map.get(a.dataset.id)));
+export function inventoryRefresh() {
+    request = inventory();
+    return request;
+}
+
+export function itemSearch(search, result, callback) {
+    return initSearch(search, result, callback, false);
+}
+
+export function inventorySearch(search, result, callback) {
+    return initSearch(search, result, callback, true);
 }

@@ -90,4 +90,5 @@ const prices = cacheWrapped((key, itemId, max = 5) => {
     }).catch(err => EMPTY);
 });
 
-module.exports.prices = (key, ids, max) => Promise.all(ids.map((a, i) => new Promise(res => setTimeout(() => res(prices(key, a, max)), i * 1000))));
+module.exports.prices = (key, ids, max) => Promise.all(
+    ids.map((a, i) => new Promise(res => setTimeout(() => res(prices(key, a, max)), i * 1000))));

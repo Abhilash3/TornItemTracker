@@ -1,5 +1,6 @@
 import {account, prices, update} from './api';
-import {asDoller, asElement, randomColor} from './util';
+import {itemSearch} from './search';
+import {asDoller, asElement, asSearchItem, randomColor} from './util';
 import Chart from 'chart.js';
 
 import trackerTemplate from '../template/tracker.html';
@@ -68,6 +69,30 @@ function trackPrices() {
     });
 }
 
+function startTrack({id, name}) {
+    items.set(name, id);
+    history.set(name, history.get(name) || {values: new Array(MAX_HISTORY), color: randomColor()});
+
+    const constraint = constraints.find(a => a.id === id);
+    if (constraint) {
+        document.querySelector('#tracker #constraints').appendChild(asElement(`
+            <div id='item-${id}' class='input-group'>
+                <div class='form-control'>${name}</div>
+                <div class='input-group-append'>
+                    <span class='form-control'>${constraint.value * 100}%</span>
+                </div>
+            </div>`));
+    }
+}
+
+function stopTrack(id) {
+    items.delete(id);
+    const elem = document.querySelector('#tracker #constraints #item-' + id);
+    if (elem) {
+        elem.parentNode.removeChild(elem);
+    }
+}
+
 export function init(parent) {
     const trackerTab = parent.querySelector('#tracker');
     trackerTab.appendChild(asElement(trackerTemplate));
@@ -95,6 +120,23 @@ export function init(parent) {
     };
     trackerTab.querySelector('#xColor').addEventListener('click', () => updateAxesColor('x', randomColor()));
     trackerTab.querySelector('#yColor').addEventListener('click', () => updateAxesColor('y', randomColor()));
+
+    const selected = tracker.querySelector('#selected');
+    const unSelect = itemSearch(
+        tracker.querySelector('#search-item'),
+        tracker.querySelector('#search-result'),
+        item => {
+            selected.appendChild(asSearchItem(item.id, item.name));
+            startTrack(item);
+        });
+
+    selected.addEventListener('click', event => {
+        if (!event.target.classList.contains('item')) return;
+        event.preventDefault();
+
+        stopTrack(event.target.dataset.id);
+        unSelect(event.target.dataset.id);
+    });
 
     const xColor = randomColor(), yColor = randomColor();
     chart = new Chart(trackerTab.querySelector('canvas.chart').getContext('2d'), {
@@ -135,31 +177,6 @@ export function init(parent) {
         },
         type: 'line',
     });
-}
 
-export function track(toTrack) {
-    items.clear();
-
-    const nameMap = new Map();
-    toTrack.forEach(({id, name}) => {
-        items.set(name, id);
-        nameMap.set(id, name);
-        history.set(name, history.get(name) || {values: new Array(MAX_HISTORY), color: randomColor()});
-    });
-
-    const details = document.querySelector('#tracker #constraints');
-    details.innerHTML = '';
-    constraints.forEach(({id, value}) => details.appendChild(asElement(`
-        <div id='${id === -1 ? 'default' : ('item-' + id)}' class='input-group'>
-            <div class='form-control'>${id === -1 ? 'All' : nameMap.get(id)}</div>
-            <div class='input-group-append'>
-                <span class='form-control'>${value * 100}%</span>
-            </div>
-        </div>`)));
-
-
-    if (!request) {
-        trackPrices();
-        request = setInterval(trackPrices, 15 * 1000);
-    }
+    setInterval(trackPrices, 15 * 1000);
 }
