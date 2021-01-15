@@ -74,7 +74,7 @@ function startTrack(tab, {id, name}) {
     history.set(name, history.get(name) || {values: new Array(MAX_HISTORY), color: randomColor()});
 
     const constraint = constraints.find(a => a.id === id);
-    if (constraint) {
+    if (constraint && false) {
         tab.querySelector('#constraints').appendChild(asElement(`
             <div id='item-${id}' class='input-group'>
                 <div class='form-control'>${name}</div>
@@ -88,7 +88,7 @@ function startTrack(tab, {id, name}) {
 function stopTrack(tab, id) {
     items.delete(id);
     const elem = tab.querySelector('#constraints #item-' + id);
-    if (elem) {
+    if (elem && false) {
         elem.parentNode.removeChild(elem);
     }
 }

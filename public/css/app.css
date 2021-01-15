@@ -2,24 +2,22 @@ body {
   text-align: center;
 }
 
-#axes-color {
-  height: fit-content;
-  padding: 10px 15px;
+@media only screen and (min-width: 1200px) {
+  #main {
+    padding: 0px 20px;
+  }
 }
 
 @media only screen and (max-width: 1200px) {
-  #axes-color, #exchanges button span.name {
+  .vertical {
     writing-mode: vertical-rl;
+    height: fit-content;
   }
 }
 
 .dark {
   filter: invert(1)hue-rotate(180deg);
   background-color: black;
-}
-
-#main {
-  padding: 0px 20px;
 }
 
 #container {
@@ -48,8 +46,4 @@ body {
 .backdrop {
   background-color: rgba(0,0,0,0.7);
   z-index: 990;
-}
-
-.nav .divider {
-  border-right: 2px solid silver;
 }
