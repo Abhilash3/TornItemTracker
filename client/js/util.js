@@ -5,7 +5,7 @@ export function asElement(str) {
 }
 
 export function asSearchItem(id, name, count) {
-    const item = asElement(`<div class='item bg-light rounded d-inline-flex p-2' data-id='${id}'>${name}</div>`);
+    const item = asElement(`<div class='item bg-light rounded d-inline-flex p-2' data-name='${name}' data-id='${id}'>${name}</div>`);
     if (count) {
         item.setAttribute('data-count', count);
         item.appendChild(asElement(`<span class='badge badge-secondary'>${count}</span>`));

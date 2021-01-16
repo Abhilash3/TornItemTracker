@@ -45,12 +45,13 @@ function updateDatasets(process = () => true) {
     chart.update();
 }
 
-function trackPrices() {
+function trackPrices(container) {
     if (!chart || !items.size) return;
 
     const max = values => values.reduce((a, b) => Math.max(a, b), -1);
     const values = Array.from(items);
     prices(values.map(([, id]) => id), 1).then(a => a.map(([[b]], i) => [values[i][0], b])).then(prices => {
+        container.innerHTML = '';
         const priceMap = new Map(prices);
         updateDatasets((name, {values}) => {
             const value = priceMap.get(name);
@@ -59,6 +60,10 @@ function trackPrices() {
 
             const isValid = values.some(a => a);
             if (!isValid) history.delete(name);
+            else if (value) {
+                container.appendChild(asElement(`
+                    <div class='card'><div class='card-body'><strong>${name}: </strong>${asDoller(value)}</div></div>`));
+            }
 
             if ((value || value === 0) && constraints.some(({check}) => check(items.get(name), value / max(values)))) {
                 notify(items.get(name), name, asDoller(value));
@@ -85,10 +90,10 @@ function startTrack(tab, {id, name}) {
     }
 }
 
-function stopTrack(tab, id) {
-    items.delete(id);
-    const elem = tab.querySelector('#constraints #item-' + id);
+function stopTrack(tab, id, name) {
+    items.delete(name);
     if (elem && false) {
+        const elem = tab.querySelector('#constraints #item-' + id);
         elem.parentNode.removeChild(elem);
     }
 }
@@ -135,8 +140,8 @@ export function init(parent) {
         event.preventDefault();
 
         event.target.parentNode.removeChild(event.target);
-        const {id} = event.target.dataset;
-        stopTrack(trackTab, id);
+        const {id, name} = event.target.dataset;
+        stopTrack(trackTab, id, name);
         unSelect(id);
     });
 
@@ -180,5 +185,6 @@ export function init(parent) {
         type: 'line',
     });
 
-    setInterval(trackPrices, 15 * 1000);
+    const priceContainer = trackTab.querySelector('#prices');
+    setInterval(() => trackPrices(priceContainer), 15 * 1000);
 }

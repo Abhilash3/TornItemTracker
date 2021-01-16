@@ -54,11 +54,11 @@ module.exports.details = cacheWrapped(key => query(key, 'user', '', 'basic,battl
     }, {total: 0});
 
     return {
-        level: a.level, gender: a.gender, userId: a.player_id,
-        name: a.name, battleStats, perks,
+        user: {level: a.level, gender: a.gender, userId: a.player_id, name: a.name},
+        battleStats, perks,
         points: {
-            jobs: a.jobpoints.jobs,
-            companies: Object.keys(a.jobpoints.companies).reduce((acc, key) => {
+            ...a.jobpoints.jobs,
+            ...Object.keys(a.jobpoints.companies).reduce((acc, key) => {
                 acc[a.jobpoints.companies[key].name] = a.jobpoints.companies[key].jobpoints;
                 return acc;
             }, {}),
