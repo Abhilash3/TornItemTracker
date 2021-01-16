@@ -1,7 +1,7 @@
 import {prices} from './api';
 import {parseQuery} from './query';
 import {inventoryRefresh, inventorySearch} from './search';
-import {asDoller, asElement, toClipboard, toMap} from './util';
+import {asDoller, asElement, findAncestor, toClipboard, toMap} from './util';
 
 import counterTemplate from '../template/counter.html';
 import progressTemplate from '../template/progress.html';
@@ -13,13 +13,6 @@ import tradeRowTemplate from '../template/tradeRow.html';
         Element.prototype.matches = Element.prototype.msMatchesSelector;
     }
 })();
-
-function closest(element, selector) {
-    while (element !== document && !element.matches(selector)) {
-        element = element.parentNode;
-    }
-    return element === document ? null : element;
-}
 
 const asHtml = (() => {
     const templated = (price, count) => `<div class='m-auto p-1'><div>${asDoller(price)}</div><div>${count}</div></div>`;
@@ -72,10 +65,10 @@ export function init(parent) {
         let target = event.target;
         if (target.nodeName.toLowerCase() === 'i') target = target.parentNode;
         if (target.nodeName.toLowerCase() !== 'button') return;
-        if (closest(target, 'div.plus-minus') === null) return;
+        if (findAncestor(target, 'div.plus-minus') === null) return;
         event.preventDefault();
 
-        const plusMinus = closest(target, 'div.plus-minus');
+        const plusMinus = findAncestor(target, 'div.plus-minus');
 
         const {min, max} = plusMinus.dataset;
         const input = plusMinus.querySelector('input');
@@ -97,10 +90,10 @@ export function init(parent) {
 
     tbody.addEventListener('click', event => {
         let target = event.target;
-        if (closest(target, 'td.info') === null) return;
+        if (findAncestor(target, 'td.info') === null) return;
         event.preventDefault();
 
-        const row = closest(target, 'tr.item-calc');
+        const row = findAncestor(target, 'tr.item-calc');
         const {id} = row.dataset;
         row.parentNode.removeChild(row);
 

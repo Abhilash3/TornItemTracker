@@ -1,3 +1,12 @@
+export function asDoller(value) {
+    const abs = Math.abs(value);
+    const floored = Math.floor(abs);
+    const formatted = String(floored).split('').reverse()
+        .reduce((acc, n, i) => acc + (i > 0 && i % 3 === 0 ? ',' : '') + n, '')
+        .split('').reverse().join('');
+    return `${value < 0 && '-' || ''}$${formatted}${String(Number((abs - floored).toFixed(2))).substring(1)}`;
+}
+
 export function asElement(str) {
     const template = document.createElement('template');
     template.innerHTML = str.trim();
@@ -13,19 +22,14 @@ export function asSearchItem(id, name, count) {
     return item;
 }
 
-export function asDoller(value) {
-    const abs = Math.abs(value);
-    const floored = Math.floor(abs);
-    const formatted = String(floored).split('').reverse()
-        .reduce((acc, n, i) => acc + (i > 0 && i % 3 === 0 ? ',' : '') + n, '')
-        .split('').reverse().join('');
-    return `${value < 0 && '-' || ''}$${formatted}${String(Number((abs - floored).toFixed(2))).substring(1)}`;
+export function findAncestor(element, selector) {
+    while (element !== document && !element.matches(selector)) {
+        element = element.parentNode;
+    }
+    return element === document ? null : element;
 }
 
-export function randomColor() {
-    const col = () => Math.floor(Math.random() * 255);
-    return `rgb(${col()},${col()},${col()})`;
-}
+export const randomColor = () => "#000000".replace(/0/g,() => (~~(Math.random() * 16)).toString(16));
 
 export function toClipboard(string) {
     const textArea = document.createElement('textarea');

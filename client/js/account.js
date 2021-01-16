@@ -11,7 +11,6 @@ export function init(parent) {
     accountTab.querySelector('#name').innerHTML = progressTemplate;
     accountTab.querySelector('#points').innerHTML = progressTemplate;
     details().then(a => {
-        console.log(a);
         accountTab.querySelector('#name').innerHTML = a.user.name;
 
         const pointTypes = Object.keys(a.points);
@@ -22,5 +21,28 @@ export function init(parent) {
         } else {
             accountTab.querySelector('#points').innerHTML = '<h5>None</h5>';
         }
+
+        const labels = ['defense', 'strength', 'speed', 'dexterity'];
+        const values = labels.map(type => a.battleStats[type].value * 100 / a.battleStats.total);
+        const max = (() => {
+            const upperLimit= Math.max(...values);
+            let n = 10;
+            while (n < upperLimit) {
+                n += 10;
+            }
+            return n
+        })();
+        const imageUrl = 'https://image-charts.com/chart?&cht=r&chxt=r&chxr=0,0,' + max +
+            '&chs=400x400&chxl=0:|' + new Array(max / 5).fill(0).map((a, i) => (i + 1) * 5 + '%').join('|') +
+            '&chl=' + labels.map(a => a[0].toUpperCase() + a.slice(1)).join('|') +
+            '&chd=t:' + [...values, values[values.length - 1]].join(',');
+        accountTab.querySelector('#stats').appendChild(asElement('<img src=\'' + imageUrl + '\'></img>'))
+
+        const elements = ['#point', '#stat'].map(a => accountTab.querySelector(a));
+        let i = 0;
+        setInterval(() => {
+            i = (i + 1) % elements.length;
+            elements[i].click();
+        }, 5 * 1000);
     });
 }
