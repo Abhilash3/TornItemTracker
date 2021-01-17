@@ -33,7 +33,7 @@ export function init(parent) {
             return n
         })();
         const imageUrl = 'https://image-charts.com/chart?&cht=r&chxt=r&chxr=0,0,' + max +
-            '&chs=400x400&chxl=0:|' + new Array(max / 5).fill(0).map((a, i) => (i + 1) * 5 + '%').join('|') +
+            '&chs=400x400&chxl=0:|' + new Array(max / 5 + 1).fill(0).map((a, i) => i * 5 + '%').join('|') +
             '&chl=' + labels.map(a => a[0].toUpperCase() + a.slice(1)).join('|') +
             '&chd=t:' + [...values, values[values.length - 1]].join(',');
         accountTab.querySelector('#stats').appendChild(asElement('<img src=\'' + imageUrl + '\'></img>'))
