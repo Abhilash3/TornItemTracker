@@ -28,21 +28,19 @@ function setupStats(container, stats) {
     const values = labels.map(type => stats[type].value * 100 / stats.total);
     const max = Math.ceil(Math.max(...values) / 10) * 10;
     const imageUrl = 'https://image-charts.com/chart?&cht=r&chxt=r&chxr=0,0,' + max +
-        '&chs=400x400&chxl=0:|' + new Array(max / 5 + 1).fill(0).map((a, i) => i * 5 + '%').join('|') +
+        '&chs=600x600&chxl=0:|' + new Array(max / 5 + 1).fill(0).map((a, i) => i * 5 + '%').join('|') +
         '&chl=' + labels.map(a => a[0].toUpperCase() + a.slice(1)).join('|') +
         '&chd=t:' + [...values, values[values.length - 1]].join(',');
-    container.appendChild(asElement('<img style=\'border-radius: 150px !important;\' src=\'' + imageUrl + '\'></img>'))
+    container.innerHTML = '<img style=\'border-radius: 150px !important;\' class=\'img-fluid\' src=\'' + imageUrl + '\'></img>';
 }
 
 export function init(parent) {
     const accountTab = parent.querySelector('#account');
     accountTab.appendChild(asElement(accountTemplate));
 
-    accountTab.querySelector('#name').innerHTML = progressTemplate;
     accountTab.querySelector('#points').innerHTML = progressTemplate;
+    accountTab.querySelector('#stats').innerHTML = progressTemplate;
     details().then(a => {
-        accountTab.querySelector('#name').innerHTML = a.user.name;
-
         setupPoints(accountTab.querySelector('#points'), a.points);
         setupStats(accountTab.querySelector('#stats'), a.battleStats);
 

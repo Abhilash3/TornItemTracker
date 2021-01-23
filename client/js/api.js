@@ -12,7 +12,7 @@ const detailRequest = get('/details');
 const itemRequest = get('/items');
 const exchangeRequest = get('/exchanges');
 
-export const account = () => get('/account');
+export const user = () => get('/account');
 export const details = () => detailRequest;
 export const items = () => itemRequest;
 export const inventory = () => get('/inventory').then(a => toMap(a, a => a.name, a => a.quantity));

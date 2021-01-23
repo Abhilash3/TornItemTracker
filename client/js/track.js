@@ -1,4 +1,4 @@
-import {account, prices, update} from './api';
+import {user, prices, update} from './api';
 import {itemSearch} from './search';
 import {asDoller, asElement, asSearchItem, findAncestor} from './util';
 
@@ -101,7 +101,7 @@ export function init(parent) {
     const trackTab = parent.querySelector('#track');
     trackTab.appendChild(asElement(trackTemplate));
 
-    account().then(({notify}) => {
+    user().then(({notify}) => {
         disabled = !notify;
         const checkbox = trackTab.querySelector('#notify');
         checkbox.checked = !!notify;

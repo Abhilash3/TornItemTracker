@@ -53,18 +53,16 @@ app.get('/login', (req, res) => {
     if (req.session.key) return res.redirect('/app');
     sendView(res, 'login');
 });
-app.post('/login', (req, res, next) => {
-    passport.authenticate('torn', (err, user) => {
+app.post('/login', (req, res, next) => passport.authenticate('torn', (err, user) => {
+    if (err) return sendError(res, err);
+    if (!user) return res.redirect('/login');
+    req.logIn(user, err => {
         if (err) return sendError(res, err);
-        if (!user) return res.redirect('/login');
-        req.logIn(user, err => {
-            if (err) return sendError(res, err);
-            req.session.user = user;
-            req.session.key = req.body.apiKey;
-            res.redirect('/app');
-        });
-    })(req, res, next);
-});
+        req.session.user = user;
+        req.session.key = req.body.apiKey;
+        res.redirect('/app');
+    });
+})(req, res, next));
 app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/login')));
 
 app.get('/app', ensureLoggedIn(), (req, res) => sendView(res, 'app'));

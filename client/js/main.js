@@ -2,6 +2,7 @@ import * as account from './account';
 import * as museum from './museum';
 import * as track from './track';
 import * as trade from './trade';
+import {user} from './api';
 import {asElement} from './util';
 
 import mainTemplate from '../template/main.html';
@@ -24,6 +25,8 @@ export function init(parent) {
         light.classList.remove('hide');
         parent.classList.add('dark');
     });
+
+    user().then(a => main.querySelector('#name').innerHTML = a.username);
 
     [account, track, trade, museum].forEach(a => a.init(main));
     light.click();
