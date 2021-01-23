@@ -12,6 +12,7 @@ const {ensureLoggedIn} = require('connect-ensure-login');
 const mongoose = require('./modal/mongoose');
 
 const Exchange = require('./modal/exchange.modal');
+const Query = require('./modal/query.modal');
 const User = require('./modal/user.modal');
 const api = require('./js/api');
 
@@ -45,7 +46,7 @@ passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
 const sendView = (res, name) => res.sendFile(`${__dirname}/public/${name}.html`);
-const sendError = (res, err) => res.status(400).json({error: err});
+const sendError = (res, err, status = 500) => res.status(status).json({error: err});
 const sendJson = (res, p) => p.then(a => res.json(a));
 
 app.get('/login', (req, res) => {
@@ -82,6 +83,14 @@ app.get('/exchange/:type', ensureLoggedIn(), ({session: {key}, params: {type}}, 
             const totalCost = itemPrices.reduce((sum, a) => sum + a);
             res.json({profit: pointPrices - totalCost, min: totalCost / points});
         });
+}));
+
+app.get('/help', ensureLoggedIn(), (req, res) => sendView(res, 'help'));
+
+const query = ({userId}, text) => new Query({userId, text, created: new Date()});
+app.post('/query', ensureLoggedIn(), (req, res) => query(req.session.user, req.body.text).save((err, doc) => {
+    if (err) return sendError(res, err);
+    res.status(200).send();
 }));
 
 app.post('/update', ensureLoggedIn(), (req, res) => User.findOneAndUpdate({userId: req.session.user.userId}, req.body, (err, doc) => {

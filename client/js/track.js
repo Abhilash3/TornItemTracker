@@ -14,7 +14,9 @@ function requestPermission(id, name) {
    });
 }
 
-let constraints = [{check: (id, rate) => rate > 0.05}];
+const openMarket = id => window.open('https://www.torn.com/imarket.php#/p=shop&step=shop&type=' + id);
+
+let constraints = [{check: (id, max, value) => value / max < 0.95}];
 let disabled = true;
 function notify(id, name, price) {
     if (disabled) return;
@@ -23,43 +25,50 @@ function notify(id, name, price) {
         const notification = new Notification(
             `${name} at ${price}.`, {body: 'Click here to open market'});
         notification.onclick = () => {
-            window.open('https://www.torn.com/imarket.php#/p=shop&step=shop&type=' + id);
+            openMarket(id);
             notification.close();
         };
     }
 }
 
 function trackPrices(container) {
-    if (!items.size) return;
-
-    const values = Array.from(items);
-    Promise.all(values.map(([, id]) => prices([id], 1))).then(a => a.map(([[[b]]], i) => [values[i][0], b])).then(prices => {
-        const priceMap = new Map(prices);
+    Promise.all(Array.from(items).map(([name, id]) => prices([id], 1).then(([[[a]]]) => [name, a]))).then(prices => {
         const format = a => Number(a.toFixed(2));
+        const checks = [[1000000000000, 't'], [1000000000, 'b'], [1000000, 'm'], [1000, 'k']];
+        const label = num => {
+            for (let [a, b] of checks) {
+                if (num > a) return format(num / a) + b;
+            }
+            return num;
+        };
 
-        values.forEach(([name]) => {
+        prices.forEach(([name, value]) => {
             const {values} = history.get(name);
-            const value = priceMap.get(name);
             values.shift();
             values.push(value);
+
+            const elem = container.querySelector(`#track-${items.get(name)} .card-body`);
+            if (!elem) return;
 
             const max = values.filter(a => a).reduce((a, b) => Math.max(a, b), -1);
             const min = values.filter(a => a).reduce((a, b) => Math.min(a, b), max);
             const data = values.map(a => a ? format((a - min) * 100 / max) : '_');
             const limit = format(100 - min * 100 / max);
 
-            const image = `https://image-charts.com/chart?cht=ls&chs=600x100&chm=B,72BD60,0,0,0&chxr=0,0,${limit}&chd=t:${data.join(',')}`;
-            const style = 'background: url(' + image + ') no-repeat; background-size: 100% 100%;';
-            const elem = container.querySelector(`#track-${items.get(name)} .card-body`);
-            elem.setAttribute('style', style);
+            const image = 'https://image-charts.com/chart?cht=ls&chs=600x100&chm=B,72BD60,0,0,0&chxt=y' +
+                `&chxl=0:|${label(min)}|${label(max)}&chxr=0,0,${limit}&chd=t:${data.join(',')}`;
+            elem.setAttribute('style', `background: url(${image}) no-repeat; background-size: 100% 100%;`);
+            elem.classList.remove('flash');
             elem.innerHTML = `<strong>${name}: </strong>${value && asDoller(value) || '...'}`;
 
-            if (!!value && constraints.some(({check}) => check(items.get(name), 1 - value / max))) {
+            if (!!value && constraints.some(({check}) => check(items.get(name), max, value))) {
                 notify(items.get(name), name, asDoller(value));
+                elem.classList.add('flash');
             }
         });
 
-        Array.from(history).filter(([name]) => !items.has(name)).forEach(([name, {values}]) => {
+        const names = new Set(prices.map(([name]) => name));
+        Array.from(history).filter(([name]) => !names.has(name)).forEach(([name, {values}]) => {
             values.shift();
             values.push(undefined);
 
@@ -73,7 +82,7 @@ function startTrack(tab, {id, name}) {
     history.set(name, history.get(name) || {values: new Array(MAX_HISTORY).fill(undefined)});
 
     const elem = asElement(`
-        <div id='track-${id}' data-name='${name}' class='card'>
+        <div id='track-${id}' data-name='${name}' data-id='${id}' class='card'>
             <div class='card-body'>
                 <strong>${name}: </strong> ...
             </div>
@@ -81,7 +90,7 @@ function startTrack(tab, {id, name}) {
     tab.querySelector('#prices').appendChild(elem);
 }
 
-function stopTrack(tab, id, name) {
+function stopTrack(tab, {id, name}) {
     items.delete(name);
 
     const elem = tab.querySelector('#prices #track-' + id);
@@ -99,25 +108,15 @@ export function init(parent) {
         checkbox.addEventListener('change', () => update({notify: disabled}).then(() => disabled = !disabled));
     });
 
-    const selected = trackTab.querySelector('#selected');
-    const unSelect = itemSearch(
-        trackTab.querySelector('#search-item'),
-        trackTab.querySelector('#search-result'),
-        item => {
-            selected.appendChild(asSearchItem(item.id, item.name));
-            startTrack(trackTab, item);
-        });
-
-    selected.addEventListener('click', event => {
-        if (!event.target.classList.contains('item')) return;
-        event.preventDefault();
-
-        event.target.parentNode.removeChild(event.target);
-        const {id, name} = event.target.dataset;
-        stopTrack(trackTab, id, name);
-        unSelect(id);
-    });
+    itemSearch(trackTab.querySelector('#item-search'), item => startTrack(trackTab, item), item => stopTrack(trackTab, item));
 
     const priceContainer = trackTab.querySelector('#prices');
+    priceContainer.addEventListener('click', event => {
+        const elem = findAncestor(event.target, '.card');
+        if (!elem) return;
+        event.preventDefault();
+
+        openMarket(elem.dataset.id);
+    });
     setInterval(() => trackPrices(priceContainer), 15 * 1000);
 }

@@ -4,6 +4,36 @@ import {asElement} from './util';
 import accountTemplate from '../template/account.html';
 import progressTemplate from '../template/progress.html';
 
+function setupAuto(elements, delay = 10) {
+    let i = 0;
+    setInterval(() => {
+        i = (i + 1) % elements.length;
+        elements[i].click();
+    }, delay * 1000);
+}
+
+function setupPoints(container, points) {
+    const pointTypes = Object.keys(points);
+    if (pointTypes.length) {
+        container.innerHTML = pointTypes.reduce((acc, type) => {
+            return acc + `<div class='card'><div class='card-body'><strong>${type}: </strong>${points[type]}</div></div>`;
+        }, '<div class=\'card-columns\'>') + '</div>';
+    } else {
+        container.innerHTML = '<h5>None</h5>';
+    }
+}
+
+function setupStats(container, stats) {
+    const labels = ['defense', 'strength', 'speed', 'dexterity'];
+    const values = labels.map(type => stats[type].value * 100 / stats.total);
+    const max = Math.ceil(Math.max(...values) / 10) * 10;
+    const imageUrl = 'https://image-charts.com/chart?&cht=r&chxt=r&chxr=0,0,' + max +
+        '&chs=400x400&chxl=0:|' + new Array(max / 5 + 1).fill(0).map((a, i) => i * 5 + '%').join('|') +
+        '&chl=' + labels.map(a => a[0].toUpperCase() + a.slice(1)).join('|') +
+        '&chd=t:' + [...values, values[values.length - 1]].join(',');
+    container.appendChild(asElement('<img style=\'border-radius: 150px !important;\' src=\'' + imageUrl + '\'></img>'))
+}
+
 export function init(parent) {
     const accountTab = parent.querySelector('#account');
     accountTab.appendChild(asElement(accountTemplate));
@@ -13,36 +43,9 @@ export function init(parent) {
     details().then(a => {
         accountTab.querySelector('#name').innerHTML = a.user.name;
 
-        const pointTypes = Object.keys(a.points);
-        if (pointTypes.length) {
-            accountTab.querySelector('#points').innerHTML = pointTypes.reduce((acc, type) => {
-                return acc + `<div class='card'><div class='card-body'><strong>${type}: </strong>${a.points[type]}</div></div>`;
-            }, '<div class=\'card-columns\'>') + '</div>';
-        } else {
-            accountTab.querySelector('#points').innerHTML = '<h5>None</h5>';
-        }
+        setupPoints(accountTab.querySelector('#points'), a.points);
+        setupStats(accountTab.querySelector('#stats'), a.battleStats);
 
-        const labels = ['defense', 'strength', 'speed', 'dexterity'];
-        const values = labels.map(type => a.battleStats[type].value * 100 / a.battleStats.total);
-        const max = (() => {
-            const upperLimit= Math.max(...values);
-            let n = 10;
-            while (n < upperLimit) {
-                n += 10;
-            }
-            return n
-        })();
-        const imageUrl = 'https://image-charts.com/chart?&cht=r&chxt=r&chxr=0,0,' + max +
-            '&chs=400x400&chxl=0:|' + new Array(max / 5 + 1).fill(0).map((a, i) => i * 5 + '%').join('|') +
-            '&chl=' + labels.map(a => a[0].toUpperCase() + a.slice(1)).join('|') +
-            '&chd=t:' + [...values, values[values.length - 1]].join(',');
-        accountTab.querySelector('#stats').appendChild(asElement('<img src=\'' + imageUrl + '\'></img>'))
-
-        const elements = ['#point', '#stat'].map(a => accountTab.querySelector(a));
-        let i = 0;
-        setInterval(() => {
-            i = (i + 1) % elements.length;
-            elements[i].click();
-        }, 5 * 1000);
+        setupAuto(['#point', '#stat'].map(a => accountTab.querySelector(a)));
     });
 }

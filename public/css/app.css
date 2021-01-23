@@ -11,7 +11,11 @@ body {
 @media only screen and (max-width: 1200px) {
   .vertical {
     writing-mode: vertical-rl;
+    -webkit-writing-mode: vertical-lr;
+  }
+  .vertical .form-control {
     height: fit-content;
+    width: -webkit-fill-available;
   }
 }
 
@@ -46,4 +50,19 @@ body {
 .backdrop {
   background-color: rgba(0,0,0,0.7);
   z-index: 990;
+}
+
+.flash{
+  -webkit-animation: flash linear 1s infinite;
+  animation: flash linear 1s infinite;
+}
+@-webkit-keyframes flash {
+  0% { opacity: 1; }
+  50% { opacity: .1; }
+  100% { opacity: 1; }
+}
+@keyframes flash {
+  0% { opacity: 1; }
+  50% { opacity: .1; }
+  100% { opacity: 1; }
 }

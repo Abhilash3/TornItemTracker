@@ -1,4 +1,5 @@
 require('./exchange.modal');
+require('./query.modal');
 require('./user.modal');
 const mongoose = require('mongoose');
 

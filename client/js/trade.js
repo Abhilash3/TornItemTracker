@@ -52,7 +52,7 @@ export function init(parent) {
     tbody = tradeTab.querySelector('table#calc tbody');
     total = tradeTab.querySelector('#total');
 
-    const triggerUpdate = ({target}) => {
+    const triggerUpdate = () => {
         const value = Array.prototype.reduce.call(tbody.querySelectorAll('tr'), (sum, tr) => {
             const [{value: price}, {value: count}] = tr.querySelectorAll('input');
             return sum + Number(price) * Number(count);
@@ -83,22 +83,15 @@ export function init(parent) {
         triggerUpdate(event);
     });
 
-    const unSelect = inventorySearch(
+    inventorySearch(
         tradeTab.querySelector('#search-inventory'),
-        tradeTab.querySelector('#search-list'),
-        (item, value) => tbody.appendChild(asTradeRow(item, value)));
-
-    tbody.addEventListener('click', event => {
-        let target = event.target;
-        if (findAncestor(target, 'td.info') === null) return;
-        event.preventDefault();
-
-        const row = findAncestor(target, 'tr.item-calc');
-        const {id} = row.dataset;
-        row.parentNode.removeChild(row);
-
-        unSelect(id);
-    });
+        tradeTab.querySelector('#search-list'), undefined,
+        (item, value) => tbody.appendChild(asTradeRow(item, value)),
+        (item, value) => {
+            const row = tbody.querySelector(`tr.item-calc[data-id='${item.id}']`);
+            row.parentNode.removeChild(row);
+            triggerUpdate();
+        });
 
     tradeTab.querySelector('#price-refresh').addEventListener('click', () => {
         const rows = tbody.querySelectorAll('tr.item-calc');
