@@ -10,10 +10,10 @@ const fire = url => fetch(url).catch(a => {
 const clone = (item, props = {}) => ({...item, ...props});
 const query = (key, type, id, ...selections) => fire(`https://api.torn.com/${type}/${id}?selections=${selections.join(',')}&key=${key}`);
 
-function cacheWrapped(service, resetTime = DEFAULT_RESET_TIME) {
+function cacheWrapped(service, resetTime, idFier) {
     const cache = new Map();
     return function(...params) {
-        const key = JSON.stringify(params);
+        const key = idFier(params);
         if (!cache.has(key)) {
             cache.set(key, service(...params));
             setTimeout(() => cache.delete(key), resetTime);
@@ -23,24 +23,27 @@ function cacheWrapped(service, resetTime = DEFAULT_RESET_TIME) {
     };
 }
 
-function itemPrices(key, itemId) {
-    return query(key, 'market', itemId, 'itemmarket', 'bazaar').then(prices => {
-        return Object.keys(prices).reduce((all, type) => {
-            const values = Object.keys(prices[type] || {})
-                .map(id => clone(prices[type][id], {id, type}));
-
-            return [...all, ...values];
-        }, []);
-    });
+function userCache(service, resetTime = DEFAULT_RESET_TIME) {
+    return cacheWrapped(service, resetTime, a => JSON.stringify(a));
 }
 
-const pointPrices = key => query(key, 'market', '', 'pointsmarket')
+function globalCache(service, resetTime = DEFAULT_RESET_TIME) {
+    return cacheWrapped(service, resetTime, ([a, ...r]) => JSON.stringify(r));
+}
+
+const itemPrices = globalCache((key, itemId) => query(key, 'market', itemId, 'itemmarket', 'bazaar')
+    .then(prices => Object.keys(prices).reduce((all, type) => {
+        const values = Object.keys(prices[type] || {}).map(id => clone(prices[type][id], {id, type}));
+        return [...all, ...values];
+    }, [])));
+
+const pointPrices = globalCache(key => query(key, 'market', '', 'pointsmarket')
         .then(({pointsmarket: prices}) => Object.keys(prices || {})
-        .map(id => clone(prices[id], {id})));
+        .map(id => clone(prices[id], {id}))));
 
 const battleStatTypes = ['strength', 'speed', 'defense', 'dexterity'];
 const perkTypes = ['job', 'property', 'stock', 'merit', 'education', 'enhancer', 'company', 'faction', 'book'];
-module.exports.details = cacheWrapped(key => query(key, 'user', '', 'basic,battlestats,perks,jobpoints').then(a => {
+module.exports.details = userCache(key => query(key, 'user', '', 'basic', 'battlestats', 'perks', 'jobpoints').then(a => {
     const battleStats = battleStatTypes.reduce((acc, key) => {
         acc[key] = {value: a[key], modifier: a[key + '_modifier'], info: a[key + '_info']};
         acc.total += acc[key].value;
@@ -68,16 +71,13 @@ module.exports.details = cacheWrapped(key => query(key, 'user', '', 'basic,battl
 
 module.exports.basic = key => query(key, 'user', '', 'basic');
 
-module.exports.items = cacheWrapped(key => {
-    return query(key, 'torn', '', 'items').then(a => a.items || {})
-        .then(a => ({0: {name: 'Point'}, ...a})).catch(err => ({}))
-        .then(items => Object.keys(items).map(id => clone(items[id], {id})));
-}, AN_HOUR_RESET_TIME);
+module.exports.items = globalCache(key => query(key, 'torn', '', 'items').then(a => a.items || {})
+    .then(a => ({0: {name: 'Point'}, ...a})).catch(err => ({}))
+    .then(items => Object.keys(items).map(id => clone(items[id], {id}))), AN_HOUR_RESET_TIME);
 
-module.exports.inventory = key => query(key, 'user', '', 'inventory')
-    .then(a => a.inventory || []).catch(err => []);
+module.exports.inventory = key => query(key, 'user', '', 'inventory').then(a => a.inventory || []).catch(err => []);
 
-const prices = cacheWrapped((key, itemId, max = 5) => {
+function prices(key, itemId, max = 5) {
     const EMPTY = [];
     return (Number(itemId) && itemPrices(key, itemId) || pointPrices(key)).then(arr => {
         if (!arr.length) return EMPTY;
@@ -88,7 +88,7 @@ const prices = cacheWrapped((key, itemId, max = 5) => {
 
         return Array.from(priceLog).sort((a, b) => a[0] - b[0]).filter((n, i) => i < max);
     }).catch(err => EMPTY);
-});
+}
 
 module.exports.prices = (key, ids, max) => Promise.all(
     ids.map((a, i) => new Promise(res => setTimeout(() => res(prices(key, a, max)), i * 1000))));

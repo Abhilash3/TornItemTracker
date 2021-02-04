@@ -8,12 +8,12 @@ const get = url => fire(url).then(a => a.json());
 const post = (url, json) => fire(url, {
     method: 'post', body: JSON.stringify(json), headers: {'Content-Type': 'application/json'},
 });
-const detailRequest = get('/details');
+const pointRequest = get('/points');
 const itemRequest = get('/items');
 const exchangeRequest = get('/exchanges');
 
 export const user = () => get('/account');
-export const details = () => detailRequest;
+export const points = () => pointRequest;
 export const items = () => itemRequest;
 export const inventory = () => get('/inventory').then(a => toMap(a, a => a.name, a => a.quantity));
 export const prices = (items, max = 5) => get(`/prices/${max}/${items.join(',')}`);

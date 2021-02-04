@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const connectMongo = require('connect-mongo');
 const cookieParser = require('cookie-parser');
 const express = require('express');
+const fetch = require('node-fetch');
 const passport = require('passport');
 const session = require('express-session');
 const {Strategy} = require('passport-custom');
@@ -70,7 +71,7 @@ app.get('/items', ensureLoggedIn(), (req, res) => sendJson(res, api.items(req.se
 app.get('/inventory', ensureLoggedIn(), (req, res) => sendJson(res, api.inventory(req.session.key)));
 app.get('/prices/:max/:items', ensureLoggedIn(), ({session: {key}, params: {items, max}}, res) => sendJson(res, api.prices(key, items.split(','), max)));
 app.get('/account', ensureLoggedIn(), (req, res) => res.json(req.session.user));
-app.get('/details', ensureLoggedIn(), (req, res) => sendJson(res, api.details(req.session.key)));
+app.get('/points', ensureLoggedIn(), (req, res) => sendJson(res, api.details(req.session.key).then(a => a.points)));
 app.get('/exchanges', ensureLoggedIn(), (req, res) => Exchange.find({}, (err, doc) => res.json(doc)));
 app.get('/exchange/:type', ensureLoggedIn(), ({session: {key}, params: {type}}, res) => Exchange.findOne({type}, (err, doc) => {
     if (!doc) return res.json({});
@@ -82,6 +83,20 @@ app.get('/exchange/:type', ensureLoggedIn(), ({session: {key}, params: {type}}, 
             res.json({profit: pointPrices - totalCost, min: totalCost / points});
         });
 }));
+
+app.get('/image/statDist', ensureLoggedIn(), (req, res) => {
+    api.details(req.session.key).then(({battleStats: stats}) => {
+        const labels = ['defense', 'strength', 'speed', 'dexterity'];
+        const values = labels.map(type => stats[type].value * 100 / stats.total);
+        const max = Math.ceil(Math.max(...values) / 10) * 10;
+        const imageUrl = 'https://image-charts.com/chart?&cht=r&chxt=r&chxr=0,0,' + max +
+            '&chs=600x550&chxl=0:|' + new Array(max / 5 + 1).fill(0).map((a, i) => i * 5 + '%').join('|') +
+            '&chl=' + labels.map(a => a[0].toUpperCase() + a.slice(1)).join('|') +
+            '&chd=t:' + [...values, values[0]].join(',') + '&chf=a,s,00000000';
+
+        return fetch(encodeURI(imageUrl));
+    }).then(data => data.body.pipe(res));
+});
 
 app.get('/help', ensureLoggedIn(), (req, res) => sendView(res, 'help'));
 
