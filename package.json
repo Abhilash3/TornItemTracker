@@ -22,7 +22,7 @@
     "express-session": "^1.17.1",
     "html-loader": "^0.5.5",
     "mongoose": "^5.10.11",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.7",
     "passport": "^0.4.1",
     "passport-custom": "^1.1.1"
   },
